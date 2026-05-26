@@ -1,34 +1,42 @@
-// Pet Filter — field-guide / natural-history book visual.
-// Cream paper · sepia ink · italic Latin · double-rule frames.
+// Pet Filter — natural-history book plate.
+// Cream paper · sepia ink · italic Latin · double-rule frames · fleurons.
 
 // ─── Design tokens ─────────────────────────────────────────────────────
-@paper: #F2E7CF;
-@paper-deep: #E8D9B5;
-@paper-edge: #D8C49A;
-@ink: #2E1F12;
+@paper: #EBDFC2;
+@paper-warm: #E2D2A9;
+@paper-deep: #D8C49A;
+@paper-edge: #BAA47A;
+@ink: #261A0F;
 @ink-soft: #4A3621;
-@ink-fade: #7A6647;
-@ink-faint: #A89572;
-@seal: #9A3A2C;   // muted crimson, used sparingly as accent
+@ink-fade: #7C6948;
+@ink-faint: #A48E64;
+@seal: #8A2E22;   // muted crimson stamp ink, used VERY sparingly
 
 @font-display: 'Cormorant Garamond', 'Cormorant', Georgia, 'Times New Roman', serif;
 @font-body: 'Source Serif 4', 'Source Serif Pro', Georgia, serif;
-@font-hand: 'Caveat', 'Bradley Hand', 'Comic Sans MS', cursive;
+@font-hand: 'Caveat', 'Bradley Hand', cursive;
 @font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 
-// Subtle paper grain — a faint repeating pattern.
-@grain: radial-gradient(rgba(46, 31, 18, 0.025) 1px, transparent 1.4px);
+// Real paper texture: an SVG-rendered fiber + foxing tile. Provides
+// turbulence-based fiber AND scattered foxing spots. background-size
+// is a half-tile so adjacent repeats don't reveal the same pattern at
+// once.
+@paper-tex: url("/pet-filter/paper.svg");
 
 // ─── Root ──────────────────────────────────────────────────────────────
 .pf-root {
   position: fixed;
   inset: 0;
-  background: @paper;
+  background-color: @paper;
+  // Layer order, top → bottom: corner vignette, paper texture, base color.
   background-image:
-    @grain,
-    @grain;
-  background-size: 4px 4px, 7px 7px;
-  background-position: 0 0, 2px 2px;
+    radial-gradient(ellipse 120% 90% at 50% 50%,
+      transparent 40%,
+      rgba(60, 38, 16, 0.10) 80%,
+      rgba(60, 38, 16, 0.22) 100%),
+    @paper-tex;
+  background-size: 100% 100%, 320px 420px;
+  background-repeat: no-repeat, repeat;
   color: @ink;
   font-family: @font-body;
   display: flex;
@@ -44,31 +52,38 @@
   width: 100%;
   max-width: 480px;
   height: 100%;
-  padding: 10px 10px;
+  padding: 10px;
   box-sizing: border-box;
 }
 
-// ─── Plate (the page itself) ──────────────────────────────────────────
+// ─── Plate (the bound page itself) ────────────────────────────────────
 .pf-plate {
   position: relative;
   flex: 1 1 0;
   min-height: 0;
   display: flex;
   flex-direction: column;
-  background:
-    @grain,
-    @grain,
-    linear-gradient(135deg, lighten(@paper, 2%) 0%, @paper 40%, darken(@paper, 4%) 100%);
-  background-size: 4px 4px, 7px 7px, 100% 100%;
-  background-position: 0 0, 2px 2px, 0 0;
+  background-color: lighten(@paper, 2%);
+  background-image:
+    // Soft vignette pulled to the corners (aged paper).
+    radial-gradient(ellipse 130% 80% at 50% 50%,
+      transparent 40%,
+      rgba(60, 38, 16, 0.08) 76%,
+      rgba(60, 38, 16, 0.18) 100%),
+    // Paper texture (offset so it doesn't tile in sync with .pf-root).
+    @paper-tex;
+  background-size: 100% 100%, 280px 380px;
+  background-position: center, 12px 18px;
+  background-repeat: no-repeat, repeat;
   color: @ink;
   box-shadow:
-    0 1px 0 rgba(46, 31, 18, 0.08),
-    0 12px 26px rgba(46, 31, 18, 0.16);
+    inset 0 0 30px rgba(86, 56, 24, 0.10),
+    0 1px 0 rgba(46, 31, 18, 0.10),
+    0 14px 28px rgba(46, 31, 18, 0.18);
   border: 1px solid @paper-edge;
 }
 
-// Decorative double-rule frame, inset by 6px from the page edge.
+// Decorative double-rule frame, inset by 6px.
 .pf-plate__rules {
   position: absolute;
   inset: 6px;
@@ -83,9 +98,6 @@
 }
 
 // ─── Plate header ─────────────────────────────────────────────────────
-// Top row centered on the plate label; subtitle row below stacks the
-// house imprint (left) and the italic rubric (right) — gives the eye a
-// real centerpiece even on narrow screens.
 .pf-plate__head {
   flex: 0 0 auto;
   display: grid;
@@ -93,31 +105,43 @@
   align-items: baseline;
   column-gap: 10px;
   row-gap: 4px;
-  padding: 22px 22px 4px;
+  padding: 22px 26px 4px;
   font-family: @font-display;
 }
 .pf-plate__house {
   grid-column: 1 / 2;
   grid-row: 2 / 3;
   font-size: 10px;
-  letter-spacing: 0.10em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: @ink-fade;
   font-weight: 500;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  font-variant: small-caps;
 }
 .pf-plate__plate {
   grid-column: 1 / -1;
   grid-row: 1 / 2;
   justify-self: center;
-  font-size: 13px;
-  letter-spacing: 0.18em;
+  font-size: 14px;
+  letter-spacing: 0.20em;
   text-transform: uppercase;
   color: @ink;
   font-weight: 600;
   white-space: nowrap;
+  font-variant: small-caps;
+  position: relative;
+  // Tiny fleuron flanking the title.
+  &::before, &::after {
+    content: '·';
+    color: @ink-fade;
+    margin: 0 12px;
+    font-size: 18px;
+    position: relative;
+    top: 1px;
+  }
 }
 .pf-plate__rubric {
   grid-column: 3 / 4;
@@ -129,21 +153,25 @@
   font-family: @font-body;
 }
 
-// Rules between sections
+// Section rules with center fleuron motif.
 .pf-plate__rule {
   flex: 0 0 auto;
-  height: 1px;
-  margin: 6px 22px 0;
-  background: @ink;
   position: relative;
-  &::after {
+  height: 10px;
+  margin: 6px 26px 0;
+  &::before, &::after {
     content: '';
     position: absolute;
-    left: 0; right: 0;
-    bottom: -3px;
-    height: 0.6px;
+    top: 5px;
+    width: calc(50% - 18px);
+    height: 1px;
     background: @ink;
   }
+  &::before { left: 0; }
+  &::after { right: 0; }
+  background-image:
+    radial-gradient(circle 1.5px at center 5px, @ink 95%, transparent 100%);
+  background-repeat: no-repeat;
 }
 
 // ─── Body ─────────────────────────────────────────────────────────────
@@ -151,7 +179,8 @@
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
-  padding: 18px 26px 22px;
+  padding: 22px 30px 32px;
+  position: relative;
   -webkit-mask-image: linear-gradient(to bottom,
     transparent 0,
     #000 14px,
@@ -171,7 +200,7 @@
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  padding: 8px 22px 18px;
+  padding: 8px 26px 18px;
   gap: 14px;
 }
 .pf-plate__foot-left {
@@ -233,50 +262,91 @@
   transform: translateY(-1px);
 }
 
-// ─── Picker hero ──────────────────────────────────────────────────────
+// ─── Marginalia (hand-written notes pinned to the margin) ─────────────
+.pf-margin-note {
+  display: block;
+  font-family: @font-hand;
+  font-size: 17px;
+  color: @ink-fade;
+  transform: rotate(-1.6deg);
+  line-height: 1.1;
+  margin-top: 4px;
+  letter-spacing: 0.005em;
+  &--right { text-align: right; transform: rotate(1.2deg); }
+}
+
+// ─── Page-number marginalia ───────────────────────────────────────────
+.pf-page-no {
+  position: absolute;
+  bottom: 10px;
+  right: 28px;
+  font-family: @font-display;
+  font-size: 11px;
+  font-style: italic;
+  color: @ink-faint;
+  letter-spacing: 0.06em;
+  pointer-events: none;
+}
+
+// ─── Picker hero with drop cap ────────────────────────────────────────
 .pf-hero {
   font-family: @font-display;
   font-weight: 500;
-  font-size: 36px;
+  font-size: 32px;
   letter-spacing: 0;
-  line-height: 1.05;
-  margin: 4px 0 8px;
+  line-height: 1.08;
+  margin: 0 0 10px;
   color: @ink;
+}
+// Drop cap on hero - first letter as an illuminated initial.
+.pf-dropcap {
+  font-family: @font-display;
+  font-weight: 600;
+  float: left;
+  font-size: 64px;
+  line-height: 0.85;
+  padding: 8px 8px 4px 0;
+  color: @seal;
+  margin-top: 2px;
 }
 .pf-deck {
   font-family: @font-body;
-  font-size: 14px;
-  line-height: 1.5;
+  font-size: 14.5px;
+  line-height: 1.55;
   color: @ink-soft;
-  margin: 0 0 6px;
+  margin: 0 0 4px;
   max-width: 30em;
   em { font-style: italic; }
 }
 
 .pf-section-rule {
-  height: 0;
-  border-top: 0.6px solid @ink-fade;
-  margin: 16px 0;
   position: relative;
-  &::after {
+  height: 18px;
+  margin: 22px 0 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  &::before, &::after {
     content: '';
-    position: absolute;
-    left: 50%;
-    top: -3px;
-    transform: translateX(-50%);
-    width: 5px;
-    height: 5px;
-    background: @paper;
-    border: 0.6px solid @ink-fade;
-    transform: translateX(-50%) rotate(45deg);
+    height: 0.8px;
+    background: @ink-fade;
+    flex: 1 1 auto;
+  }
+  & > .pf-fleuron {
+    flex: 0 0 auto;
+    color: @ink-fade;
+    font-family: @font-display;
+    font-size: 18px;
+    padding: 0 12px;
+    line-height: 1;
   }
 }
 
-// ─── Specimen upload ──────────────────────────────────────────────────
+// ─── Specimen upload (paper-pinned photo + serif label) ───────────────
 .pf-specimen {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 .pf-specimen__label {
   font-family: @font-display;
@@ -284,41 +354,48 @@
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: @ink-fade;
+  font-variant: small-caps;
 }
 .pf-specimen__inner {
   display: grid;
-  grid-template-columns: 116px 1fr;
-  gap: 16px;
+  grid-template-columns: 124px 1fr;
+  gap: 18px;
   align-items: stretch;
 }
 .pf-specimen__slot {
-  width: 116px;
-  height: 116px;
-  background: @paper-deep;
-  border: 1px solid @ink-fade;
+  width: 124px;
+  height: 124px;
+  background: lighten(@paper, 3%);
+  border: 1px solid @ink;
   display: flex;
   align-items: center;
   justify-content: center;
   color: @ink-faint;
   overflow: hidden;
   position: relative;
-  // pinned-photo corners
+  box-shadow: 0 3px 0 rgba(46, 31, 18, 0.12),
+              0 1px 0 rgba(46, 31, 18, 0.08);
+  // Tiny crimson wax-seal corners.
   &::before, &::after {
     content: '';
     position: absolute;
-    width: 18px;
-    height: 6px;
-    background: rgba(154, 58, 44, 0.08);
+    width: 14px;
+    height: 5px;
+    background: rgba(138, 46, 34, 0.20);
     transform: rotate(-12deg);
+    box-shadow: 0 1px 0 rgba(138, 46, 34, 0.15);
   }
-  &::before { top: -2px; left: -4px; }
-  &::after { bottom: -2px; right: -4px; transform: rotate(168deg); }
+  &::before { top: -2px; left: -2px; }
+  &::after { bottom: -2px; right: -2px; transform: rotate(168deg); }
 }
 .pf-specimen__img {
   width: 100%; height: 100%;
   object-fit: cover;
   display: block;
-  filter: sepia(0.18) contrast(1.04);
+  // Heavier sepia + grain for the user's photo so it blends with the
+  // page instead of looking like a digital paste-in.
+  filter: sepia(0.40) contrast(1.06) saturate(0.65);
+  mix-blend-mode: multiply;
 }
 .pf-specimen__side {
   display: flex;
@@ -329,10 +406,10 @@
 .pf-specimen__caption {
   font-family: @font-body;
   font-style: italic;
-  font-size: 12.5px;
+  font-size: 13px;
   color: @ink-soft;
   margin: 0;
-  line-height: 1.45;
+  line-height: 1.5;
 }
 
 // ─── CTA link (used as upload button) ────────────────────────────────
@@ -340,7 +417,7 @@
   position: relative;
   display: inline-block;
   font-family: @font-display;
-  font-size: 17px;
+  font-size: 18px;
   font-weight: 600;
   color: @ink;
   cursor: pointer;
@@ -371,32 +448,34 @@
 }
 .pf-pick-head__title {
   font-family: @font-display;
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 500;
   margin: 0;
   color: @ink;
+  font-variant: small-caps;
 }
 .pf-pick-head__sub {
   font-family: @font-body;
-  font-size: 12px;
+  font-size: 12.5px;
   color: @ink-fade;
 }
 
-.pf-pet-section + .pf-pet-section { margin-top: 18px; }
+.pf-pet-section + .pf-pet-section { margin-top: 22px; }
 
 .pf-pet-section__head {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin: 0 0 10px;
+  margin: 0 0 12px;
 }
 .pf-pet-section__name {
   font-family: @font-display;
   font-style: italic;
-  font-size: 13px;
+  font-size: 13.5px;
   color: @ink-soft;
   letter-spacing: 0.03em;
   flex: 0 0 auto;
+  font-variant: small-caps;
 }
 .pf-pet-section__rule {
   flex: 1 1 auto;
@@ -404,20 +483,26 @@
   border-top: 0.6px solid @ink-fade;
 }
 
-// ─── Pet tile (specimen card) ─────────────────────────────────────────
+// ─── Pet tile (mini-plate with cartouche frame) ───────────────────────
 .pf-pet-grid {
   list-style: none;
   margin: 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
 }
 .pf-pet-tile {
   --tile-tint: @ink;
   position: relative;
   width: 100%;
-  background: @paper-deep;
+  background:
+    radial-gradient(ellipse 130% 130% at 50% 35%,
+      lighten(@paper, 5%) 0%,
+      @paper 70%),
+    @paper-tex;
+  background-size: 100% 100%, 220px 280px;
+  background-position: center, 4px 8px;
   border: 1px solid @ink-fade;
   color: @ink;
   display: flex;
@@ -425,48 +510,85 @@
   align-items: center;
   justify-content: flex-start;
   gap: 4px;
-  padding: 18px 6px 10px;
+  padding: 22px 10px 14px;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   transition: transform 140ms ease, background 200ms ease, border-color 140ms ease;
+  // Inner hairline border, like a real plate edge.
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 4px;
+    border: 0.6px solid @ink-fade;
+    pointer-events: none;
+  }
   &:active { transform: scale(0.97); }
   &.is-active {
-    background: lighten(@paper, 3%);
     border-color: var(--tile-tint);
-    box-shadow: inset 0 0 0 1px var(--tile-tint);
+    box-shadow: inset 0 0 0 1px var(--tile-tint),
+                0 3px 6px rgba(46, 31, 18, 0.18);
     .pf-pet-tile__plate { color: var(--tile-tint); }
+    &::after { border-color: var(--tile-tint); }
   }
 }
 .pf-pet-tile__plate {
   position: absolute;
-  top: 5px;
-  left: 8px;
+  top: 8px;
+  left: 12px;
   font-family: @font-display;
-  font-size: 9px;
-  letter-spacing: 0.12em;
+  font-size: 10px;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: @ink-fade;
+  font-variant: small-caps;
+}
+.pf-pet-tile__seal {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  font-family: @font-display;
+  font-style: italic;
+  font-size: 11px;
+  color: @ink-faint;
 }
 .pf-pet-tile__icon {
-  width: 44px;
-  height: 44px;
+  // The wreath frame around each icon.
+  position: relative;
+  width: 78px;
+  height: 78px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--tile-tint);
-  margin: 4px 0;
+  margin: 6px 0 4px;
+  // Cartouche oval.
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border: 0.6px solid @ink;
+    border-radius: 50%;
+  }
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 4px;
+    border: 0.4px solid @ink-fade;
+    border-radius: 50%;
+  }
 }
 .pf-pet-tile__name {
   font-family: @font-display;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 500;
   color: @ink;
   text-align: center;
   line-height: 1.1;
+  margin-top: 2px;
 }
 .pf-pet-tile__latin {
   font-family: @font-body;
-  font-size: 10px;
+  font-size: 11px;
   font-style: italic;
   color: @ink-fade;
   text-align: center;
@@ -478,7 +600,7 @@
   margin: 10px 0;
   padding: 8px 12px;
   border: 0.6px solid @seal;
-  background: rgba(154, 58, 44, 0.06);
+  background: rgba(138, 46, 34, 0.06);
   color: @seal;
   font-family: @font-display;
   font-style: italic;
@@ -496,7 +618,7 @@
 }
 .pf-proc__photo {
   position: relative;
-  width: 240px;
+  width: 248px;
   aspect-ratio: 1;
   background: @paper-deep;
   overflow: hidden;
@@ -506,23 +628,24 @@
   width: 100%; height: 100%;
   object-fit: cover;
   display: block;
-  filter: sepia(0.32) contrast(1.04);
+  filter: sepia(0.40) contrast(1.06) saturate(0.7);
+  mix-blend-mode: multiply;
 }
 .pf-proc__scan {
   position: absolute;
   left: 0; right: 0;
-  height: 4px;
+  height: 3px;
   background: linear-gradient(to bottom,
     transparent, var(--tint), transparent);
-  opacity: 0.35;
-  animation: pf-proc-scan 2200ms linear infinite;
+  opacity: 0.30;
+  animation: pf-proc-scan 2400ms linear infinite;
   pointer-events: none;
 }
 @keyframes pf-proc-scan {
   0%   { transform: translateY(-6px); opacity: 0; }
-  10%  { opacity: 0.5; }
-  90%  { opacity: 0.5; }
-  100% { transform: translateY(240px); opacity: 0; }
+  10%  { opacity: 0.45; }
+  90%  { opacity: 0.45; }
+  100% { transform: translateY(250px); opacity: 0; }
 }
 .pf-proc__corner {
   position: absolute;
@@ -539,11 +662,12 @@
 }
 .pf-proc__step {
   font-family: @font-display;
-  font-size: 18px;
+  font-size: 19px;
   color: @ink;
   text-align: center;
   min-height: 22px;
   letter-spacing: 0.01em;
+  font-style: italic;
 }
 .pf-proc__dots {
   display: inline-block;
@@ -562,7 +686,7 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: 6px 0 12px;
+  padding: 0 0 12px;
   align-items: center;
   text-align: center;
 }
@@ -574,18 +698,19 @@
 }
 .pf-result__title {
   font-family: @font-display;
-  font-size: 44px;
+  font-size: 48px;
   font-weight: 500;
   letter-spacing: 0.005em;
   margin: 0;
   line-height: 1;
   color: @ink;
+  font-variant: small-caps;
 }
 .pf-result__latin {
   margin: 0 0 8px;
   font-family: @font-body;
   font-style: italic;
-  font-size: 15px;
+  font-size: 16px;
   color: @ink-soft;
 }
 .pf-result__plate {
@@ -594,16 +719,16 @@
   width: 100%;
   max-width: 360px;
   aspect-ratio: 1;
-  background: @paper-deep;
+  background: lighten(@paper, 3%);
   overflow: hidden;
   margin: 6px auto 4px;
   border: 1px solid @ink;
-  box-shadow: 0 6px 14px rgba(46, 31, 18, 0.14);
+  box-shadow: 0 8px 16px rgba(46, 31, 18, 0.18);
   animation: pf-result-bloom 900ms cubic-bezier(0.45, 0.05, 0.5, 0.95) backwards;
   &::after {
     content: '';
     position: absolute;
-    inset: 6px;
+    inset: 5px;
     border: 0.6px solid @ink;
     pointer-events: none;
   }
@@ -616,13 +741,14 @@
   width: 100%; height: 100%;
   object-fit: cover;
   display: block;
-  filter: sepia(0.06) contrast(1.02);
+  filter: sepia(0.10) contrast(1.04) saturate(0.92);
 }
 .pf-result__caption {
   margin: 0;
   font-family: @font-body;
   font-size: 12px;
   color: @ink-faint;
+  font-style: italic;
 }
 
 // ─── Reactions ────────────────────────────────────────────────────────
@@ -633,10 +759,10 @@
   padding: 8px 0 0;
 }
 .pf-reaction {
-  width: 40px;
-  height: 40px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
-  background: @paper-deep;
+  background: lighten(@paper, 3%);
   border: 0.8px solid @ink-fade;
   color: @ink-soft;
   cursor: pointer;
@@ -656,17 +782,19 @@
 .pf-wall-head { margin-bottom: 4px; }
 .pf-wall-head__title {
   font-family: @font-display;
-  font-size: 32px;
+  font-size: 34px;
   font-weight: 500;
   letter-spacing: 0;
   color: @ink;
   margin: 0;
   line-height: 1.05;
+  font-variant: small-caps;
 }
 .pf-wall-head__sub {
   font-family: @font-body;
-  font-size: 13px;
+  font-size: 13.5px;
   color: @ink-soft;
+  font-style: italic;
   margin: 6px 0 0;
 }
 
@@ -690,6 +818,8 @@
   padding: 6px 0;
   position: relative;
   -webkit-tap-highlight-color: transparent;
+  font-variant: small-caps;
+  letter-spacing: 0.03em;
   &.is-active {
     color: @ink;
     font-weight: 600;
@@ -746,7 +876,7 @@
   padding: 6px 4px;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  &:active { background: @paper-deep; }
+  &:active { background: rgba(60, 38, 16, 0.06); }
 }
 .pf-wall-row__plate {
   font-family: @font-display;
@@ -755,6 +885,7 @@
   text-transform: uppercase;
   color: @ink-fade;
   text-align: center;
+  font-variant: small-caps;
 }
 .pf-wall-row__cover {
   --tint: @ink;
@@ -763,32 +894,42 @@
   background: @paper-deep;
   border: 1px solid var(--tint);
   overflow: hidden;
+  position: relative;
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 3px;
+    border: 0.4px solid @ink-fade;
+    pointer-events: none;
+  }
 }
 .pf-wall-row__img {
   width: 100%; height: 100%;
   object-fit: cover;
   display: block;
-  filter: sepia(0.05);
+  filter: sepia(0.08) contrast(1.02);
 }
 .pf-wall-row__info { min-width: 0; }
 .pf-wall-row__pet {
   font-family: @font-display;
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 500;
   color: @ink;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  font-variant: small-caps;
 }
 .pf-wall-row__latin {
   font-family: @font-body;
-  font-size: 11px;
+  font-size: 11.5px;
   font-style: italic;
   color: @ink-soft;
 }
 .pf-wall-row__by {
   font-family: @font-body;
-  font-size: 10.5px;
+  font-size: 11px;
+  font-style: italic;
   color: @ink-fade;
   margin-top: 2px;
 }
@@ -797,7 +938,7 @@
   align-items: center;
   gap: 4px;
   padding: 3px 7px;
-  background: @paper-deep;
+  background: lighten(@paper, 3%);
   border: 0.6px solid @ink-fade;
   font-family: @font-body;
   font-size: 11px;
@@ -829,12 +970,19 @@
   background: @paper-deep;
   border: 1px solid var(--tint);
   overflow: hidden;
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 4px;
+    border: 0.4px solid @ink-fade;
+    pointer-events: none;
+  }
 }
 .pf-wall-tile__img {
   width: 100%; height: 100%;
   object-fit: cover;
   display: block;
-  filter: sepia(0.05);
+  filter: sepia(0.06) contrast(1.02);
 }
 .pf-wall-tile__like {
   position: absolute;
@@ -844,7 +992,7 @@
   align-items: center;
   gap: 3px;
   padding: 2px 6px;
-  background: @paper;
+  background: lighten(@paper, 4%);
   border: 0.6px solid @ink-soft;
   color: @ink-soft;
   font-family: @font-body;
@@ -853,12 +1001,13 @@
 .pf-wall-tile__name {
   margin-top: 8px;
   font-family: @font-display;
-  font-size: 14px;
+  font-size: 15px;
   color: @ink;
+  font-variant: small-caps;
 }
 .pf-wall-tile__latin {
   font-family: @font-body;
-  font-size: 10px;
+  font-size: 11px;
   font-style: italic;
   color: @ink-fade;
 }

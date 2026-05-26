@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Paper texture overlay. Layered onto the plate as a CSS background.
+     Three layers, applied via SVG filter:
+       1. Fine fiber (turbulence at small scale)
+       2. Coarser cloud (turbulence at large scale, low opacity)
+       3. Sparse foxing dots (rendered statically below)
+     CSS uses this 600×800 tile with `background-size: 300px 400px`
+     so the tile half-covers visible patches and repeats discreetly. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 800" width="600" height="800">
+  <defs>
+    <filter id="fiber" x="0" y="0" width="100%" height="100%">
+      <!-- Two-scale turbulence blended for paper grain. -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="3" result="fineNoise"/>
+      <feTurbulence type="fractalNoise" baseFrequency="0.18" numOctaves="2" seed="11" result="coarseNoise"/>
+      <feColorMatrix in="fineNoise" type="matrix"
+        values="0 0 0 0 0.18
+                0 0 0 0 0.12
+                0 0 0 0 0.07
+                0 0 0 0.16 0" result="fineDark"/>
+      <feColorMatrix in="coarseNoise" type="matrix"
+        values="0 0 0 0 0.40
+                0 0 0 0 0.30
+                0 0 0 0 0.16
+                0 0 0 0.10 0" result="coarseWarm"/>
+      <feMerge>
+        <feMergeNode in="coarseWarm"/>
+        <feMergeNode in="fineDark"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <!-- Fiber layer fills the tile. -->
+  <rect width="100%" height="100%" filter="url(#fiber)" opacity="0.85"/>
+
+  <!-- Sparse foxing — irregular brown spots, soft. -->
+  <g fill="#7A4A1F" opacity="0.18">
+    <circle cx="48" cy="62" r="3.5"/>
+    <circle cx="52" cy="65" r="2"/>
+    <circle cx="183" cy="120" r="2.5"/>
+    <circle cx="412" cy="48" r="4"/>
+    <circle cx="418" cy="55" r="2.2"/>
+    <circle cx="296" cy="280" r="3"/>
+    <circle cx="92" cy="408" r="2.5"/>
+    <circle cx="540" cy="395" r="3.5"/>
+    <circle cx="78" cy="595" r="3"/>
+    <circle cx="486" cy="612" r="2.5"/>
+    <circle cx="244" cy="710" r="4"/>
+    <circle cx="250" cy="717" r="2"/>
+    <circle cx="372" cy="744" r="3"/>
+    <circle cx="155" cy="222" r="2"/>
+    <circle cx="320" cy="450" r="2.4"/>
+    <circle cx="448" cy="240" r="3"/>
+  </g>
+  <g fill="#9A6E36" opacity="0.10">
+    <circle cx="60" cy="220" r="6"/>
+    <circle cx="380" cy="378" r="7"/>
+    <circle cx="208" cy="568" r="5"/>
+    <circle cx="464" cy="488" r="6"/>
+  </g>
+</svg>

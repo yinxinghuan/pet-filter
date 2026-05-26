@@ -7,7 +7,10 @@ import type { PetShot } from '../types';
 export type Stage = '' | 'uploading' | 'morphing' | 'rendering' | 'settling';
 
 interface GenInput {
-  file: File;
+  /** Either a fresh File the user picked OR a pre-uploaded URL (e.g.
+   *  the user's Aigram avatar, already hosted by the platform). The
+   *  URL path skips the upload step entirely. */
+  source: { kind: 'file'; file: File } | { kind: 'url'; url: string };
   petId: string;
 }
 
@@ -28,7 +31,7 @@ export function usePetGen(): UsePetGen {
   const inFlight = useRef(false);
 
   const generate = useCallback(
-    async ({ file, petId }: GenInput): Promise<PetShot> => {
+    async ({ source, petId }: GenInput): Promise<PetShot> => {
       const pet = petById(petId);
       if (!pet) throw new Error(`unknown pet id: ${petId}`);
       if (inFlight.current) throw new Error('pet-gen: already in flight');
@@ -37,10 +40,18 @@ export function usePetGen(): UsePetGen {
       setError(null);
 
       try {
-        setStage('uploading');
-        const prepared = await prepareSelfie(file);
-        const uploaded = await upload(prepared, 'selfie.jpg');
-        const selfieUrl = uploaded.url;
+        let selfieUrl: string;
+        if (source.kind === 'url') {
+          // Already hosted (Aigram avatar) — skip upload entirely.
+          setStage('uploading');
+          await new Promise((r) => setTimeout(r, 240));
+          selfieUrl = source.url;
+        } else {
+          setStage('uploading');
+          const prepared = await prepareSelfie(source.file);
+          const uploaded = await upload(prepared, 'selfie.jpg');
+          selfieUrl = uploaded.url;
+        }
 
         setStage('morphing');
         // tiny beat so the user reads the morphing label

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useGameSave } from '@shared/save';
-import { useGameEvent } from '@shared/runtime';
+import { useGameEvent, callAigramAPI, isInAigram, telegramId, type AigramResponse } from '@shared/runtime';
 import PickerScreen from './components/PickerScreen';
 import ProcessingScreen from './components/ProcessingScreen';
 import ResultScreen from './components/ResultScreen';
@@ -9,9 +9,13 @@ import { usePetGen } from './hooks/usePetGen';
 import { useWall } from './hooks/useWall';
 import { t } from './i18n';
 import { playClick, playReveal, unlockAudio } from './utils/audio';
-import { previewURL } from './utils/selfie';
 import type { Phase, PetSave, PetShot, ReactionKind } from './types';
 import './PetFilter.less';
+
+type Source =
+  | { kind: 'file'; file: File; previewUrl: string }
+  | { kind: 'url'; url: string }
+  | null;
 
 export default function PetFilter() {
   const { savedData, persist } = useGameSave<PetSave>('pet-filter');
@@ -20,10 +24,39 @@ export default function PetFilter() {
 
   const [phase, setPhase] = useState<Phase>('picker');
   const [pendingPet, setPendingPet] = useState<string | null>(null);
-  const [pendingPreviewUrl, setPendingPreviewUrl] = useState<string | null>(null);
   const [current, setCurrent] = useState<PetShot | null>(null);
   const [cameFromWall, setCameFromWall] = useState(false);
   const [error, setError] = useState<string>('');
+
+  // Source state lifted to parent so navigating to wall + back keeps
+  // the picked likeness on file.
+  const [source, setSource] = useState<Source>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+
+  // Fetch current user's avatar from Aigram once, pre-fill specimen if
+  // available. Off-platform users (or accounts without an avatar) fall
+  // through to the upload-first CTA.
+  useEffect(() => {
+    if (!isInAigram || !telegramId) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await callAigramAPI<AigramResponse<{ name?: string; head_url?: string }>>(
+          `/note/telegram/user/get/info/by/telegram_id?telegram_id=${encodeURIComponent(String(telegramId))}`,
+          'GET',
+        );
+        const url = res?.data?.head_url;
+        if (cancelled) return;
+        if (url) {
+          setAvatarUrl(url);
+          // Only auto-fill if the user hasn't already picked their own
+          // likeness in this session.
+          setSource((prev) => prev ?? { kind: 'url', url });
+        }
+      } catch { /* ignore */ }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   // First-touch audio unlock.
   const firstTouchRef = useRef(false);
@@ -41,8 +74,6 @@ export default function PetFilter() {
   const [wallScope, setWallScope] = useState<ScopeMode>('my');
   const scopeInitialized = useRef(false);
 
-  // Local mirror of own shots so a freshly generated one shows up
-  // immediately (useGameSave doesn't echo back on persist).
   const [localExtra, setLocalExtra] = useState<PetShot[]>([]);
   const shots: PetShot[] = [...localExtra, ...(savedData?.shots ?? [])];
 
@@ -54,7 +85,7 @@ export default function PetFilter() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [savedData]);
 
-  // ─── Reactions ───────────────────────────────────────────────────────
+  // ─── Reactions ────────────────────────────────────────────────────
   const myReactions = (() => {
     const out = new Map<string, Set<ReactionKind>>();
     const reactions = savedData?.reactions ?? {};
@@ -80,16 +111,18 @@ export default function PetFilter() {
     persist({ shots: savedData?.shots ?? [], reactions });
   };
 
-  // ─── Phase transitions ───────────────────────────────────────────────
-  const handleSubmit = async (file: File, petId: string) => {
+  // ─── Phase transitions ────────────────────────────────────────────
+  const handleSubmit = async (petId: string) => {
+    if (!source) return;
     setError('');
     playClick();
     setPendingPet(petId);
-    const url = previewURL(file);
-    setPendingPreviewUrl(url);
     setPhase('processing');
     try {
-      const shot = await petGen.generate({ file, petId });
+      const genSource = source.kind === 'file'
+        ? { kind: 'file' as const, file: source.file }
+        : { kind: 'url' as const, url: source.url };
+      const shot = await petGen.generate({ source: genSource, petId });
       setCurrent(shot);
       setCameFromWall(false);
       setPhase('result');
@@ -100,9 +133,6 @@ export default function PetFilter() {
     } catch (e) {
       setError(t('err_gen_failed'));
       setPhase('picker');
-    } finally {
-      if (url) URL.revokeObjectURL(url);
-      setPendingPreviewUrl(null);
     }
   };
 
@@ -123,21 +153,27 @@ export default function PetFilter() {
     setPhase(current ? 'result' : 'picker');
   };
 
-  const handleViewFromWall = (
-    shot: PetShot,
-    _author?: { userId: string; userName?: string; userAvatarUrl?: string },
-  ) => {
+  const handleViewFromWall = (shot: PetShot) => {
     playClick();
     setCurrent(shot);
     setCameFromWall(true);
     setPhase('result');
   };
 
+  // The processing screen shows the source thumbnail. Compute it from
+  // whichever kind of source we have.
+  const procPreview = !source ? undefined
+    : source.kind === 'file' ? source.previewUrl
+    : source.url;
+
   return (
     <div className="pf-root">
       <div className="pf-frame">
         {phase === 'picker' && (
           <PickerScreen
+            source={source}
+            onSourceChange={setSource}
+            hasAvatarOnFile={!!avatarUrl}
             onSubmit={handleSubmit}
             onWall={handleWall}
             errorLabel={error || undefined}
@@ -147,7 +183,7 @@ export default function PetFilter() {
           <ProcessingScreen
             stage={petGen.stage}
             petId={pendingPet}
-            selfiePreviewUrl={pendingPreviewUrl ?? undefined}
+            selfiePreviewUrl={procPreview}
           />
         )}
         {phase === 'result' && current && (

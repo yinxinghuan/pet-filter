@@ -1,0 +1,881 @@
+// Pet Filter — field-guide / natural-history book visual.
+// Cream paper · sepia ink · italic Latin · double-rule frames.
+
+// ─── Design tokens ─────────────────────────────────────────────────────
+@paper: #F2E7CF;
+@paper-deep: #E8D9B5;
+@paper-edge: #D8C49A;
+@ink: #2E1F12;
+@ink-soft: #4A3621;
+@ink-fade: #7A6647;
+@ink-faint: #A89572;
+@seal: #9A3A2C;   // muted crimson, used sparingly as accent
+
+@font-display: 'Cormorant Garamond', 'Cormorant', Georgia, 'Times New Roman', serif;
+@font-body: 'Source Serif 4', 'Source Serif Pro', Georgia, serif;
+@font-hand: 'Caveat', 'Bradley Hand', 'Comic Sans MS', cursive;
+@font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+// Subtle paper grain — a faint repeating pattern.
+@grain: radial-gradient(rgba(46, 31, 18, 0.025) 1px, transparent 1.4px);
+
+// ─── Root ──────────────────────────────────────────────────────────────
+.pf-root {
+  position: fixed;
+  inset: 0;
+  background: @paper;
+  background-image:
+    @grain,
+    @grain;
+  background-size: 4px 4px, 7px 7px;
+  background-position: 0 0, 2px 2px;
+  color: @ink;
+  font-family: @font-body;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.pf-frame {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 480px;
+  height: 100%;
+  padding: 10px 10px;
+  box-sizing: border-box;
+}
+
+// ─── Plate (the page itself) ──────────────────────────────────────────
+.pf-plate {
+  position: relative;
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background:
+    @grain,
+    @grain,
+    linear-gradient(135deg, lighten(@paper, 2%) 0%, @paper 40%, darken(@paper, 4%) 100%);
+  background-size: 4px 4px, 7px 7px, 100% 100%;
+  background-position: 0 0, 2px 2px, 0 0;
+  color: @ink;
+  box-shadow:
+    0 1px 0 rgba(46, 31, 18, 0.08),
+    0 12px 26px rgba(46, 31, 18, 0.16);
+  border: 1px solid @paper-edge;
+}
+
+// Decorative double-rule frame, inset by 6px from the page edge.
+.pf-plate__rules {
+  position: absolute;
+  inset: 6px;
+  pointer-events: none;
+  border: 1px solid @ink;
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 3px;
+    border: 0.6px solid @ink;
+  }
+}
+
+// ─── Plate header ─────────────────────────────────────────────────────
+// Top row centered on the plate label; subtitle row below stacks the
+// house imprint (left) and the italic rubric (right) — gives the eye a
+// real centerpiece even on narrow screens.
+.pf-plate__head {
+  flex: 0 0 auto;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: baseline;
+  column-gap: 10px;
+  row-gap: 4px;
+  padding: 22px 22px 4px;
+  font-family: @font-display;
+}
+.pf-plate__house {
+  grid-column: 1 / 2;
+  grid-row: 2 / 3;
+  font-size: 10px;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: @ink-fade;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pf-plate__plate {
+  grid-column: 1 / -1;
+  grid-row: 1 / 2;
+  justify-self: center;
+  font-size: 13px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: @ink;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.pf-plate__rubric {
+  grid-column: 3 / 4;
+  grid-row: 2 / 3;
+  font-size: 11px;
+  font-style: italic;
+  color: @ink-soft;
+  text-align: right;
+  font-family: @font-body;
+}
+
+// Rules between sections
+.pf-plate__rule {
+  flex: 0 0 auto;
+  height: 1px;
+  margin: 6px 22px 0;
+  background: @ink;
+  position: relative;
+  &::after {
+    content: '';
+    position: absolute;
+    left: 0; right: 0;
+    bottom: -3px;
+    height: 0.6px;
+    background: @ink;
+  }
+}
+
+// ─── Body ─────────────────────────────────────────────────────────────
+.pf-plate__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 18px 26px 22px;
+  -webkit-mask-image: linear-gradient(to bottom,
+    transparent 0,
+    #000 14px,
+    #000 calc(100% - 14px),
+    transparent 100%);
+          mask-image: linear-gradient(to bottom,
+    transparent 0,
+    #000 14px,
+    #000 calc(100% - 14px),
+    transparent 100%);
+  > * { flex-shrink: 0; }
+}
+
+// ─── Plate footer ─────────────────────────────────────────────────────
+.pf-plate__foot {
+  flex: 0 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 8px 22px 18px;
+  gap: 14px;
+}
+.pf-plate__foot-left {
+  font-family: @font-display;
+  font-style: italic;
+  font-size: 12px;
+  color: @ink-fade;
+}
+.pf-plate__imprint {
+  font-family: @font-body;
+  font-style: italic;
+  color: @ink-faint;
+  font-size: 11px;
+}
+.pf-plate__foot-action {
+  background: none;
+  border: 0;
+  font-family: @font-display;
+  font-size: 14px;
+  font-style: italic;
+  color: @ink-soft;
+  cursor: pointer;
+  padding: 4px 0;
+  -webkit-tap-highlight-color: transparent;
+  &:active { color: @seal; }
+}
+.pf-plate__foot-hero {
+  background: none;
+  border: 0;
+  font-family: @font-display;
+  font-size: 22px;
+  font-weight: 600;
+  color: @ink;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 4px 0;
+  -webkit-tap-highlight-color: transparent;
+  text-decoration: underline;
+  text-decoration-thickness: 0.6px;
+  text-underline-offset: 6px;
+  text-decoration-color: @ink-fade;
+  &.is-disabled {
+    color: @ink-faint;
+    text-decoration-color: @ink-faint;
+    font-style: italic;
+    font-size: 16px;
+    cursor: default;
+  }
+  &:active:not(.is-disabled) { color: @seal; }
+}
+.pf-plate__foot-arrow {
+  font-family: @font-body;
+  font-size: 18px;
+  color: inherit;
+  display: inline-block;
+  transform: translateY(-1px);
+}
+
+// ─── Picker hero ──────────────────────────────────────────────────────
+.pf-hero {
+  font-family: @font-display;
+  font-weight: 500;
+  font-size: 36px;
+  letter-spacing: 0;
+  line-height: 1.05;
+  margin: 4px 0 8px;
+  color: @ink;
+}
+.pf-deck {
+  font-family: @font-body;
+  font-size: 14px;
+  line-height: 1.5;
+  color: @ink-soft;
+  margin: 0 0 6px;
+  max-width: 30em;
+  em { font-style: italic; }
+}
+
+.pf-section-rule {
+  height: 0;
+  border-top: 0.6px solid @ink-fade;
+  margin: 16px 0;
+  position: relative;
+  &::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: -3px;
+    transform: translateX(-50%);
+    width: 5px;
+    height: 5px;
+    background: @paper;
+    border: 0.6px solid @ink-fade;
+    transform: translateX(-50%) rotate(45deg);
+  }
+}
+
+// ─── Specimen upload ──────────────────────────────────────────────────
+.pf-specimen {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.pf-specimen__label {
+  font-family: @font-display;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: @ink-fade;
+}
+.pf-specimen__inner {
+  display: grid;
+  grid-template-columns: 116px 1fr;
+  gap: 16px;
+  align-items: stretch;
+}
+.pf-specimen__slot {
+  width: 116px;
+  height: 116px;
+  background: @paper-deep;
+  border: 1px solid @ink-fade;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: @ink-faint;
+  overflow: hidden;
+  position: relative;
+  // pinned-photo corners
+  &::before, &::after {
+    content: '';
+    position: absolute;
+    width: 18px;
+    height: 6px;
+    background: rgba(154, 58, 44, 0.08);
+    transform: rotate(-12deg);
+  }
+  &::before { top: -2px; left: -4px; }
+  &::after { bottom: -2px; right: -4px; transform: rotate(168deg); }
+}
+.pf-specimen__img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
+  filter: sepia(0.18) contrast(1.04);
+}
+.pf-specimen__side {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+}
+.pf-specimen__caption {
+  font-family: @font-body;
+  font-style: italic;
+  font-size: 12.5px;
+  color: @ink-soft;
+  margin: 0;
+  line-height: 1.45;
+}
+
+// ─── CTA link (used as upload button) ────────────────────────────────
+.pf-cta-link {
+  position: relative;
+  display: inline-block;
+  font-family: @font-display;
+  font-size: 17px;
+  font-weight: 600;
+  color: @ink;
+  cursor: pointer;
+  padding: 4px 0;
+  text-decoration: underline;
+  text-decoration-thickness: 0.8px;
+  text-underline-offset: 5px;
+  text-decoration-color: @ink;
+  -webkit-tap-highlight-color: transparent;
+  &__file {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+  }
+  &__text { letter-spacing: 0.01em; }
+  &:active &__text { color: @seal; }
+}
+
+// ─── Picker headings ──────────────────────────────────────────────────
+.pf-pick-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 10px;
+}
+.pf-pick-head__title {
+  font-family: @font-display;
+  font-size: 22px;
+  font-weight: 500;
+  margin: 0;
+  color: @ink;
+}
+.pf-pick-head__sub {
+  font-family: @font-body;
+  font-size: 12px;
+  color: @ink-fade;
+}
+
+.pf-pet-section + .pf-pet-section { margin-top: 18px; }
+
+.pf-pet-section__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 10px;
+}
+.pf-pet-section__name {
+  font-family: @font-display;
+  font-style: italic;
+  font-size: 13px;
+  color: @ink-soft;
+  letter-spacing: 0.03em;
+  flex: 0 0 auto;
+}
+.pf-pet-section__rule {
+  flex: 1 1 auto;
+  height: 0;
+  border-top: 0.6px solid @ink-fade;
+}
+
+// ─── Pet tile (specimen card) ─────────────────────────────────────────
+.pf-pet-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.pf-pet-tile {
+  --tile-tint: @ink;
+  position: relative;
+  width: 100%;
+  background: @paper-deep;
+  border: 1px solid @ink-fade;
+  color: @ink;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 4px;
+  padding: 18px 6px 10px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 140ms ease, background 200ms ease, border-color 140ms ease;
+  &:active { transform: scale(0.97); }
+  &.is-active {
+    background: lighten(@paper, 3%);
+    border-color: var(--tile-tint);
+    box-shadow: inset 0 0 0 1px var(--tile-tint);
+    .pf-pet-tile__plate { color: var(--tile-tint); }
+  }
+}
+.pf-pet-tile__plate {
+  position: absolute;
+  top: 5px;
+  left: 8px;
+  font-family: @font-display;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: @ink-fade;
+}
+.pf-pet-tile__icon {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--tile-tint);
+  margin: 4px 0;
+}
+.pf-pet-tile__name {
+  font-family: @font-display;
+  font-size: 13px;
+  font-weight: 500;
+  color: @ink;
+  text-align: center;
+  line-height: 1.1;
+}
+.pf-pet-tile__latin {
+  font-family: @font-body;
+  font-size: 10px;
+  font-style: italic;
+  color: @ink-fade;
+  text-align: center;
+  line-height: 1.1;
+}
+
+// ─── Errors ───────────────────────────────────────────────────────────
+.pf-error {
+  margin: 10px 0;
+  padding: 8px 12px;
+  border: 0.6px solid @seal;
+  background: rgba(154, 58, 44, 0.06);
+  color: @seal;
+  font-family: @font-display;
+  font-style: italic;
+  font-size: 13px;
+}
+
+// ─── Processing ───────────────────────────────────────────────────────
+.pf-proc {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  padding: 16px 0 12px;
+  --tint: @ink;
+}
+.pf-proc__photo {
+  position: relative;
+  width: 240px;
+  aspect-ratio: 1;
+  background: @paper-deep;
+  overflow: hidden;
+  border: 1px solid @ink;
+}
+.pf-proc__photo-img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
+  filter: sepia(0.32) contrast(1.04);
+}
+.pf-proc__scan {
+  position: absolute;
+  left: 0; right: 0;
+  height: 4px;
+  background: linear-gradient(to bottom,
+    transparent, var(--tint), transparent);
+  opacity: 0.35;
+  animation: pf-proc-scan 2200ms linear infinite;
+  pointer-events: none;
+}
+@keyframes pf-proc-scan {
+  0%   { transform: translateY(-6px); opacity: 0; }
+  10%  { opacity: 0.5; }
+  90%  { opacity: 0.5; }
+  100% { transform: translateY(240px); opacity: 0; }
+}
+.pf-proc__corner {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-color: @ink;
+  border-style: solid;
+  border-width: 0;
+  pointer-events: none;
+  &--tl { top: 6px; left: 6px; border-top-width: 1px; border-left-width: 1px; }
+  &--tr { top: 6px; right: 6px; border-top-width: 1px; border-right-width: 1px; }
+  &--bl { bottom: 6px; left: 6px; border-bottom-width: 1px; border-left-width: 1px; }
+  &--br { bottom: 6px; right: 6px; border-bottom-width: 1px; border-right-width: 1px; }
+}
+.pf-proc__step {
+  font-family: @font-display;
+  font-size: 18px;
+  color: @ink;
+  text-align: center;
+  min-height: 22px;
+  letter-spacing: 0.01em;
+}
+.pf-proc__dots {
+  display: inline-block;
+  width: 22px;
+  text-align: left;
+  color: @ink-fade;
+}
+.pf-proc__fineprint {
+  font-family: @font-body;
+  font-size: 11.5px;
+  color: @ink-faint;
+}
+
+// ─── Result ───────────────────────────────────────────────────────────
+.pf-result {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 6px 0 12px;
+  align-items: center;
+  text-align: center;
+}
+.pf-result__subhead {
+  margin: 0;
+  font-family: @font-body;
+  font-size: 13px;
+  color: @ink-soft;
+}
+.pf-result__title {
+  font-family: @font-display;
+  font-size: 44px;
+  font-weight: 500;
+  letter-spacing: 0.005em;
+  margin: 0;
+  line-height: 1;
+  color: @ink;
+}
+.pf-result__latin {
+  margin: 0 0 8px;
+  font-family: @font-body;
+  font-style: italic;
+  font-size: 15px;
+  color: @ink-soft;
+}
+.pf-result__plate {
+  position: relative;
+  --tint: @ink;
+  width: 100%;
+  max-width: 360px;
+  aspect-ratio: 1;
+  background: @paper-deep;
+  overflow: hidden;
+  margin: 6px auto 4px;
+  border: 1px solid @ink;
+  box-shadow: 0 6px 14px rgba(46, 31, 18, 0.14);
+  animation: pf-result-bloom 900ms cubic-bezier(0.45, 0.05, 0.5, 0.95) backwards;
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 6px;
+    border: 0.6px solid @ink;
+    pointer-events: none;
+  }
+}
+@keyframes pf-result-bloom {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+.pf-result__img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
+  filter: sepia(0.06) contrast(1.02);
+}
+.pf-result__caption {
+  margin: 0;
+  font-family: @font-body;
+  font-size: 12px;
+  color: @ink-faint;
+}
+
+// ─── Reactions ────────────────────────────────────────────────────────
+.pf-reactions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  padding: 8px 0 0;
+}
+.pf-reaction {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: @paper-deep;
+  border: 0.8px solid @ink-fade;
+  color: @ink-soft;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+  &.is-active {
+    background: @seal;
+    color: @paper;
+    border-color: @seal;
+  }
+  &:disabled { cursor: default; }
+}
+
+// ─── Wall ─────────────────────────────────────────────────────────────
+.pf-wall-head { margin-bottom: 4px; }
+.pf-wall-head__title {
+  font-family: @font-display;
+  font-size: 32px;
+  font-weight: 500;
+  letter-spacing: 0;
+  color: @ink;
+  margin: 0;
+  line-height: 1.05;
+}
+.pf-wall-head__sub {
+  font-family: @font-body;
+  font-size: 13px;
+  color: @ink-soft;
+  margin: 6px 0 0;
+}
+
+.pf-wall-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0 0 14px;
+}
+.pf-scope-tabs {
+  display: flex;
+  gap: 18px;
+}
+.pf-scope-tab {
+  background: none;
+  border: 0;
+  font-family: @font-display;
+  font-size: 14px;
+  color: @ink-fade;
+  cursor: pointer;
+  padding: 6px 0;
+  position: relative;
+  -webkit-tap-highlight-color: transparent;
+  &.is-active {
+    color: @ink;
+    font-weight: 600;
+    &::after {
+      content: '';
+      position: absolute;
+      left: 0; right: 0; bottom: 0;
+      height: 1.2px;
+      background: @ink;
+    }
+  }
+}
+.pf-view-switch {
+  display: flex;
+  gap: 4px;
+}
+.pf-view-switch__btn {
+  background: none;
+  border: 0;
+  width: 26px; height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: @ink-faint;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  &.is-active { color: @ink; }
+}
+
+.pf-wall-empty {
+  padding: 32px 0;
+  text-align: center;
+  font-family: @font-body;
+  font-style: italic;
+  font-size: 13px;
+  color: @ink-fade;
+}
+
+.pf-wall-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  > li + li {
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 0.6px dashed @ink-faint;
+  }
+}
+.pf-wall-row {
+  display: grid;
+  grid-template-columns: 40px 64px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 4px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  &:active { background: @paper-deep; }
+}
+.pf-wall-row__plate {
+  font-family: @font-display;
+  font-size: 11px;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: @ink-fade;
+  text-align: center;
+}
+.pf-wall-row__cover {
+  --tint: @ink;
+  width: 64px;
+  height: 64px;
+  background: @paper-deep;
+  border: 1px solid var(--tint);
+  overflow: hidden;
+}
+.pf-wall-row__img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
+  filter: sepia(0.05);
+}
+.pf-wall-row__info { min-width: 0; }
+.pf-wall-row__pet {
+  font-family: @font-display;
+  font-size: 16px;
+  font-weight: 500;
+  color: @ink;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pf-wall-row__latin {
+  font-family: @font-body;
+  font-size: 11px;
+  font-style: italic;
+  color: @ink-soft;
+}
+.pf-wall-row__by {
+  font-family: @font-body;
+  font-size: 10.5px;
+  color: @ink-fade;
+  margin-top: 2px;
+}
+.pf-like-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 7px;
+  background: @paper-deep;
+  border: 0.6px solid @ink-fade;
+  font-family: @font-body;
+  font-size: 11px;
+  color: @ink-soft;
+  &.is-liked {
+    background: @seal;
+    color: @paper;
+    border-color: @seal;
+  }
+}
+
+.pf-wall-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+.pf-wall-tile {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  text-align: center;
+}
+.pf-wall-tile__cover {
+  --tint: @ink;
+  position: relative;
+  aspect-ratio: 1;
+  background: @paper-deep;
+  border: 1px solid var(--tint);
+  overflow: hidden;
+}
+.pf-wall-tile__img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
+  filter: sepia(0.05);
+}
+.pf-wall-tile__like {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 6px;
+  background: @paper;
+  border: 0.6px solid @ink-soft;
+  color: @ink-soft;
+  font-family: @font-body;
+  font-size: 9px;
+}
+.pf-wall-tile__name {
+  margin-top: 8px;
+  font-family: @font-display;
+  font-size: 14px;
+  color: @ink;
+}
+.pf-wall-tile__latin {
+  font-family: @font-body;
+  font-size: 10px;
+  font-style: italic;
+  color: @ink-fade;
+}
+
+// ─── Globals ──────────────────────────────────────────────────────────
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: @paper;
+}
+body {
+  font-family: @font-body;
+  color: @ink;
+  -webkit-font-smoothing: antialiased;
+}
+button { font-family: inherit; }
+input { font-family: inherit; }
+* { box-sizing: border-box; }
+em { font-style: italic; }

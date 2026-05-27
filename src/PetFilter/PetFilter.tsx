@@ -86,6 +86,11 @@ export default function PetFilter() {
       setCurrent(fakeShot);
       setCameFromWall(false);
       setPhase('result');
+    } else if (demo === 'result-wall') {
+      // Wall-tapped-into-result: shows the reaction buttons.
+      setCurrent(fakeShot);
+      setCameFromWall(true);
+      setPhase('result');
     } else if (demo === 'wall' || demo === 'wall-empty') {
       setPhase('wall');
     }
@@ -137,10 +142,18 @@ export default function PetFilter() {
   }, [savedData]);
 
   // ─── Reactions ────────────────────────────────────────────────────
+  // useGameSave doesn't echo savedData back synchronously on persist
+  // (known issue, also documented in Album Cover Generator). So we
+  // keep a local mirror that the UI reads first; saved data merges in
+  // when it eventually rehydrates.
+  const [localReactions, setLocalReactions] = useState<Record<string, ReactionKind[]>>({});
   const myReactions = (() => {
     const out = new Map<string, Set<ReactionKind>>();
-    const reactions = savedData?.reactions ?? {};
-    for (const [id, kinds] of Object.entries(reactions)) {
+    const merged: Record<string, ReactionKind[]> = {
+      ...(savedData?.reactions ?? {}),
+      ...localReactions,
+    };
+    for (const [id, kinds] of Object.entries(merged)) {
       out.set(id, new Set(kinds));
     }
     return out;
@@ -159,6 +172,9 @@ export default function PetFilter() {
       reactions[id] = id === shotId ? [...set] : [...kinds];
     }
     if (!reactions[shotId]) reactions[shotId] = [...set];
+    // Update the local mirror immediately so this render flips the
+    // button to its active state, then persist to the platform.
+    setLocalReactions((prev) => ({ ...prev, [shotId]: [...set] }));
     persist({ shots: savedData?.shots ?? [], reactions });
   };
 

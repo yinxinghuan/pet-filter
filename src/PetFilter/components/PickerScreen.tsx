@@ -168,6 +168,9 @@ export default function PickerScreen({
 }
 
 function PetTile({ pet, active, onPick }: { pet: Pet; active: boolean; onPick: (id: string) => void }) {
+  // Image cover when generated; SVG engraving as fallback (transparent
+  // on broken-load via onError — the SVG underneath stays visible).
+  const [imgFailed, setImgFailed] = useState(false);
   return (
     <li>
       <button
@@ -178,7 +181,15 @@ function PetTile({ pet, active, onPick }: { pet: Pet; active: boolean; onPick: (
       >
         <span className="pf-pet-tile__plate">Pl. {pet.plate}</span>
         <div className="pf-pet-tile__icon" aria-hidden>
-          <PetEngraving id={pet.id} size={62} />
+          {imgFailed ? (
+            <PetEngraving id={pet.id} size={62} />
+          ) : (
+            <img className="pf-pet-tile__cover"
+                 src={`/pet-filter/cover_${pet.id}.jpg`}
+                 alt=""
+                 draggable={false}
+                 onError={() => setImgFailed(true)} />
+          )}
         </div>
         <div className="pf-pet-tile__name">{pet.name}</div>
         <div className="pf-pet-tile__latin"><em>{pet.latin}</em></div>

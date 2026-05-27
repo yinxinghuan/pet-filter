@@ -23,23 +23,39 @@ export interface Pet {
   tint: string;
 }
 
-// Shared style suffix appended to every pet prompt — defines the
-// aesthetic the entire game is themed around: 19th-c. natural history
-// plate. Audubon / Haeckel / Buffon school. Hand-painted, NOT photo-
-// realistic. Keeping this consistent across all 12 species so the wall
-// looks like a single bound volume.
+// HYBRID prompt — the key insight from user feedback: the AI output
+// must clearly retain the user's face, eyes, expression, identity.
+// "Pet Filter" is not "generate me a generic cat" — it's "show me as
+// a half-cat hybrid". So we lead with the SUBJECT and frame the
+// species as a transformation overlaid on their face.
+//
+// Each pet's prompt is `pet.prompt + STYLE_SUFFIX`, where pet.prompt
+// describes the BLEND (hybrid features overlaid on the human face)
+// instead of "Portrait of a [pet]". The species descriptors below
+// have been rewritten accordingly.
 const STYLE_SUFFIX = (
-  ' Rendered as a 19th-century zoological plate from a natural history book — ' +
-  'hand-colored lithograph or engraving, fine pen-and-ink linework with soft ' +
-  'watercolor wash, in the painterly tradition of John James Audubon and Ernst ' +
-  'Haeckel. Centered specimen study, head-and-shoulders bust, naturalist' +
-  "'s observation pose. Aged cream paper background with faint foxing and " +
+  ' The result must read as a HYBRID portrait — half-human, half-creature — ' +
+  'NOT as a pure animal. The viewer must still recognize the original person. ' +
+  'Centered head-and-shoulders bust, naturalist\'s observation pose. ' +
+  'Rendered as a 19th-century zoological plate from a natural history book ' +
+  '— hand-colored lithograph or engraving, fine pen-and-ink linework with ' +
+  'soft watercolor wash, in the painterly tradition of John James Audubon ' +
+  'and Ernst Haeckel. Aged cream paper background with faint foxing and ' +
   'subtle paper texture, muted earthen palette of sepia, sage green, dusty ' +
-  'rose, and ivory, with hand-painted color washes over crisp linework. ' +
-  'Retain the recognizable facial structure and expression of the reference ' +
-  'subject, translated into illustration rather than photograph. ' +
-  'Painterly, traditional, no plastic sheen, no photography, no 3D render, ' +
+  'rose, and ivory, hand-painted color washes over crisp linework. ' +
+  'Painterly, traditional — no plastic sheen, no photography, no 3D render, ' +
   'no neon, no digital glow. 1:1 aspect, no text, no labels, no logos, no border.'
+);
+
+// Each prompt leads with the HYBRID framing. The reference image is
+// the user's photo; the model must keep their face recognizable while
+// overlaying the species-specific features below.
+const HYBRID_PREFIX = (
+  'A 19th-century zoological plate of an anthropomorphic HYBRID. ' +
+  'The subject in the reference image is a real person — KEEP their ' +
+  'facial structure, eye placement, expression, hairline, and ' +
+  'personal identity CLEARLY recognizable. Blend onto the SAME face ' +
+  'the features of: '
 );
 
 export const PETS: Pet[] = [
@@ -51,7 +67,7 @@ export const PETS: Pet[] = [
     plate: 'I',
     category: 'everyday',
     tint: '#8B4B3A',
-    prompt: 'Portrait of a domestic shorthair cat, soft fur, alert almond eyes, pink nose, whiskers, ears pricked.' + STYLE_SUFFIX,
+    prompt: HYBRID_PREFIX + 'soft tabby fur creeping across the cheeks and brow, feline almond pupils retaining the subject\'s eye color, small triangular cat ears emerging from where the human ears were, delicate whiskers.' + STYLE_SUFFIX,
   },
   {
     id: 'dog',
@@ -60,7 +76,7 @@ export const PETS: Pet[] = [
     plate: 'II',
     category: 'everyday',
     tint: '#8B4B3A',
-    prompt: 'Portrait of a friendly mixed-breed dog, glossy coat, big honest eyes, gentle smile, tongue slightly out, floppy ears.' + STYLE_SUFFIX,
+    prompt: HYBRID_PREFIX + 'soft canine fur on the cheeks, big honest eyes that still hold the subject\'s expression, lop ears emerging from the hairline, a gentle dog snout barely forward of the human nose.' + STYLE_SUFFIX,
   },
   {
     id: 'hamster',
@@ -69,7 +85,7 @@ export const PETS: Pet[] = [
     plate: 'III',
     category: 'everyday',
     tint: '#A67C3F',
-    prompt: 'Portrait of a tiny golden hamster, round cheeks stuffed, bright black-bead eyes, twitching pink nose, soft caramel fur.' + STYLE_SUFFIX,
+    prompt: HYBRID_PREFIX + 'puffy caramel cheeks emerging from the human face, small round hamster ears, a tiny twitching pink nose, the subject\'s eyes now bead-bright but still expressive.' + STYLE_SUFFIX,
   },
   {
     id: 'duck',
@@ -78,7 +94,7 @@ export const PETS: Pet[] = [
     plate: 'IV',
     category: 'everyday',
     tint: '#B08C2E',
-    prompt: 'Portrait of a young yellow duck, fluffy feathers, wide orange bill, calm dark eyes, soft chest down.' + STYLE_SUFFIX,
+    prompt: HYBRID_PREFIX + 'soft duckling down on the cheeks and neck, a wide flat orange bill emerging from where the human mouth was, calm dark eyes that retain the subject\'s expression.' + STYLE_SUFFIX,
   },
 
   // ─── Wholesome quirky ───
@@ -89,7 +105,7 @@ export const PETS: Pet[] = [
     plate: 'V',
     category: 'wholesome',
     tint: '#7A5B2F',
-    prompt: 'Portrait of a capybara, the world\'s most relaxed rodent, sleepy half-closed eyes, soft brown coarse fur, blunt snout, faint smile, hot-spring serenity.' + STYLE_SUFFIX,
+    prompt: HYBRID_PREFIX + 'soft coarse brown capybara fur on the cheeks, sleepy half-closed eyes (still the subject\'s), a blunt friendly snout barely emerging from the human face, hot-spring serenity.' + STYLE_SUFFIX,
   },
   {
     id: 'sloth',
@@ -98,7 +114,7 @@ export const PETS: Pet[] = [
     plate: 'VI',
     category: 'wholesome',
     tint: '#6E5F38',
-    prompt: 'Portrait of a three-toed sloth, shaggy moss-tinged fur, dark patches around dreamy half-lidded eyes, slow benevolent smile, claws lightly visible.' + STYLE_SUFFIX,
+    prompt: HYBRID_PREFIX + 'shaggy moss-tinged fur on the cheeks and neck, dark patches around the human eyes, dreamy half-lidded expression, a slow benevolent smile.' + STYLE_SUFFIX,
   },
   {
     id: 'parrot',
@@ -107,7 +123,7 @@ export const PETS: Pet[] = [
     plate: 'VII',
     category: 'wholesome',
     tint: '#A33C2A',
-    prompt: 'Portrait of a vivid scarlet macaw parrot, brilliant red and green plumage, curved black beak, sharp curious eye with white ring, head tilted.' + STYLE_SUFFIX,
+    prompt: HYBRID_PREFIX + 'brilliant red and green feather plumage around the face, a curved black beak softly emerging where the human nose and mouth were, a sharp curious eye with white feathered ring.' + STYLE_SUFFIX,
   },
   {
     id: 'axolotl',
@@ -116,7 +132,7 @@ export const PETS: Pet[] = [
     plate: 'VIII',
     category: 'wholesome',
     tint: '#B66D6F',
-    prompt: 'Portrait of a pink axolotl underwater, translucent pale skin, feathery external gill fronds fanning out, perpetual smile, tiny dark dot eyes, water ripples on face.' + STYLE_SUFFIX,
+    prompt: HYBRID_PREFIX + 'translucent pale pink skin tone, feathery axolotl gill fronds fanning out from where the human ears were, a perpetual gentle smile, tiny dark dot eyes that retain expression.' + STYLE_SUFFIX,
   },
   {
     id: 'hedgehog',
@@ -125,7 +141,7 @@ export const PETS: Pet[] = [
     plate: 'IX',
     category: 'wholesome',
     tint: '#8C6A3D',
-    prompt: 'Portrait of a small hedgehog, ring of cream and brown quills, soft round face, tiny shiny black eyes, small pink nose, slight smile.' + STYLE_SUFFIX,
+    prompt: HYBRID_PREFIX + 'a ring of cream-and-brown quills crowning the head and running along the cheeks, a small round face that\'s still the subject\'s, shiny dark eyes, a tiny pink nose.' + STYLE_SUFFIX,
   },
 
   // ─── Uncanny ───
@@ -136,7 +152,7 @@ export const PETS: Pet[] = [
     plate: 'X',
     category: 'uncanny',
     tint: '#3F6E78',
-    prompt: 'Portrait of a giant clam half-opened, ruffled iridescent blue and purple mantle inside, faint eye-spots along the rim, calcified ridged white shell, slightly unsettling but vivid.' + STYLE_SUFFIX,
+    prompt: HYBRID_PREFIX + 'ruffled iridescent blue-and-purple mantle framing the subject\'s face like a collar, faint eye-spots along the rim, the human face peering out from inside the calcified ridged shell halves.' + STYLE_SUFFIX,
   },
   {
     id: 'octopus',
@@ -145,7 +161,7 @@ export const PETS: Pet[] = [
     plate: 'XI',
     category: 'uncanny',
     tint: '#5B3A6E',
-    prompt: 'Portrait of an octopus, bulbous violet head, intelligent horizontal slit pupil eyes, suckered tentacles curling near face, mottled chromatophore skin, faint blush of color.' + STYLE_SUFFIX,
+    prompt: HYBRID_PREFIX + 'a bulbous violet octopus mantle behind and around the human head, intelligent horizontal slit-pupil eyes where the human eyes were, suckered tentacles curling near the face, mottled chromatophore skin.' + STYLE_SUFFIX,
   },
   {
     id: 'snail',
@@ -154,7 +170,7 @@ export const PETS: Pet[] = [
     plate: 'XII',
     category: 'uncanny',
     tint: '#4F5E2A',
-    prompt: 'Portrait of a garden snail, glossy spiral brown shell on its back, long sensitive eye-stalks raised, glistening moist body, calm and unhurried.' + STYLE_SUFFIX,
+    prompt: HYBRID_PREFIX + 'a glossy spiral brown shell rising from the back of the human head, long sensitive eye-stalks lifting up from the temples, the human face glistening moist and calm.' + STYLE_SUFFIX,
   },
 ];
 

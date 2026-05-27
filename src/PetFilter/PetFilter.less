@@ -1132,7 +1132,14 @@
 .pf-front__portrait--placeholder {
   cursor: default;
 }
-.pf-front__portrait--demo { cursor: default; }
+// Demo / live portraits are tap targets — clicking the plate opens
+// the volume (or the wall detail). Subtle scale on press.
+.pf-front__portrait--demo,
+.pf-front__portrait--live {
+  cursor: pointer;
+  transition: transform 160ms ease;
+  &:active { transform: scale(0.98); }
+}
 @keyframes pf-front-hero-fade {
   from { opacity: 0; transform: scale(0.95); }
   to   { opacity: 1; transform: scale(1); }
@@ -1143,12 +1150,30 @@
   height: 264px;
   background: lighten(@paper, 4%);
   border-radius: 50%;
-  border: 2px solid @ink;
+  border: 1.5px solid @ink;
   overflow: hidden;
+  // Paper-flush: no modern drop shadow. The frame uses a double-ring
+  // border + inner ink-bleed vignette so the image reads as PRINTED
+  // into the page, not floating above it.
   box-shadow:
-    inset 0 0 0 5px @paper,
-    inset 0 0 0 5.8px @ink,
-    0 14px 28px rgba(46, 31, 18, 0.28);
+    inset 0 0 0 4px @paper,
+    inset 0 0 0 4.6px @ink-fade,
+    inset 0 0 12px rgba(46, 31, 18, 0.18);
+}
+// Faint ink-bleed gradient inside the image — pulls the edges into
+// the paper so the photo doesn't have a hard digital boundary.
+.pf-front__portrait-circle::after {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  border-radius: 50%;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 110% 110% at 50% 50%,
+      transparent 60%,
+      rgba(46, 31, 18, 0.20) 100%);
+  mix-blend-mode: multiply;
+  z-index: 1;
 }
 .pf-front__portrait-img {
   width: 100%;
@@ -1184,6 +1209,20 @@
   color: @ink-fade;
   margin-top: 8px;
   font-style: italic;
+}
+// The "tap to begin" hint pulses softly so the user notices the
+// affordance without the page feeling restless.
+.pf-front__portrait-hint {
+  font-family: @font-display;
+  font-size: 14px;
+  color: @ink-soft;
+  margin-top: 10px;
+  letter-spacing: 0.04em;
+  animation: pf-front-hint-pulse 2200ms ease-in-out infinite;
+}
+@keyframes pf-front-hint-pulse {
+  0%, 100% { opacity: 0.65; }
+  50%      { opacity: 1; }
 }
 .pf-front__portrait--placeholder .pf-front__portrait-circle {
   background:

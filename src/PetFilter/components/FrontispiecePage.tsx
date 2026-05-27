@@ -73,13 +73,13 @@ export default function FrontispiecePage({
           <div className="pf-front__year"><em>{t('front_year')}</em></div>
         </div>
 
-        {/* ─── Hero portrait ─── */}
+        {/* ─── Hero portrait — primary tap target ─── */}
         {!loaded ? (
           <div className="pf-front__portrait pf-front__portrait--placeholder" aria-hidden />
         ) : hero ? (
           <FrontHero key={hero.shot.id} entry={hero} onView={onView} />
         ) : (
-          <FrontDemo />
+          <FrontDemo onOpen={handleOpen} />
         )}
 
         {/* ─── Wax seal (single color accent) ─── */}
@@ -94,7 +94,8 @@ export default function FrontispiecePage({
 }
 
 // When no real community data exists, cycle through curated demos.
-function FrontDemo() {
+// The whole plate is a tap target that opens the volume.
+function FrontDemo({ onOpen }: { onOpen: () => void }) {
   const [i, setI] = useState(0);
   useEffect(() => {
     const id = setInterval(() => setI((n) => (n + 1) % DEMO_PORTRAITS.length), 3200);
@@ -106,7 +107,8 @@ function FrontDemo() {
     <button type="button"
             className="pf-front__portrait pf-front__portrait--demo"
             style={{ '--tint': pet?.tint } as React.CSSProperties}
-            tabIndex={-1}>
+            onPointerDown={onOpen}
+            aria-label={t('front_cta_open')}>
       <div className="pf-front__portrait-circle">
         <img className="pf-front__portrait-img"
              key={demo.src}
@@ -114,15 +116,15 @@ function FrontDemo() {
              alt={pet?.name}
              draggable={false}
              onError={(e) => {
-               // If demo image not yet shipped (e.g. local dev before
-               // gen-script ran), keep the placeholder ring visible.
                (e.currentTarget as HTMLImageElement).style.opacity = '0';
              }} />
       </div>
       <div className="pf-front__portrait-cap">
         <div className="pf-front__portrait-name">{pet?.name}</div>
         <div className="pf-front__portrait-latin"><em>{pet?.latin}</em></div>
-        <div className="pf-front__portrait-by">an example specimen</div>
+        <div className="pf-front__portrait-by pf-front__portrait-hint">
+          <em>— {t('front_cta_open')} —</em>
+        </div>
       </div>
     </button>
   );

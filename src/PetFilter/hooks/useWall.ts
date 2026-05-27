@@ -17,16 +17,35 @@ interface SaveRow {
   resource_data?: string;
 }
 
+/** Diagnostic info from the last fetch — used by the wall's
+ *  ?debug=1 panel to show what the platform actually returned. */
+export interface WallDiagnostics {
+  isInAigram: boolean;
+  sessionId: string | null;
+  telegramId: string | null;
+  rowsFromPlatform: number;
+  userIdsFromPlatform: string[];
+  parsedShots: number;
+  error: string | null;
+  fetchStatus: 'idle' | 'loading' | 'ok' | 'failed' | 'skipped';
+}
+
 export interface UseWall {
   entries: WallEntry[];
   loaded: boolean;
   refresh: () => void;
+  diagnostics: WallDiagnostics;
 }
 
 export function useWall(): UseWall {
   const [entries, setEntries] = useState<WallEntry[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [nonce, setNonce] = useState(0);
+  const [diagnostics, setDiagnostics] = useState<WallDiagnostics>({
+    isInAigram, sessionId: null, telegramId,
+    rowsFromPlatform: 0, userIdsFromPlatform: [],
+    parsedShots: 0, error: null, fetchStatus: 'idle',
+  });
 
   const refresh = useCallback(() => setNonce((n) => n + 1), []);
 
@@ -43,8 +62,15 @@ export function useWall(): UseWall {
     });
     if (!isInAigram || !sessionId) {
       setLoaded(true);
+      setDiagnostics({
+        isInAigram, sessionId, telegramId,
+        rowsFromPlatform: 0, userIdsFromPlatform: [],
+        parsedShots: 0, error: null,
+        fetchStatus: 'skipped',
+      });
       return;
     }
+    setDiagnostics((d) => ({ ...d, fetchStatus: 'loading', sessionId, telegramId }));
     let cancelled = false;
     (async () => {
       try {
@@ -91,10 +117,24 @@ export function useWall(): UseWall {
             shot,
           })),
         );
+        setDiagnostics({
+          isInAigram, sessionId, telegramId,
+          rowsFromPlatform: rows.length,
+          userIdsFromPlatform: rows.map((r) => r.user_id),
+          parsedShots: parsed.length,
+          error: null,
+          fetchStatus: 'ok',
+        });
       } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
         // tslint:disable-next-line:no-console
         console.warn('[pet-filter wall] fetch failed', err);
-        if (!cancelled) setEntries([]);
+        if (!cancelled) {
+          setEntries([]);
+          setDiagnostics((d) => ({
+            ...d, error: msg, fetchStatus: 'failed',
+          }));
+        }
       } finally {
         if (!cancelled) setLoaded(true);
       }
@@ -102,7 +142,7 @@ export function useWall(): UseWall {
     return () => { cancelled = true; };
   }, [nonce]);
 
-  return { entries, loaded, refresh };
+  return { entries, loaded, refresh, diagnostics };
 }
 
 export function isSelf(entry: WallEntry): boolean {

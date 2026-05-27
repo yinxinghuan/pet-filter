@@ -5,10 +5,13 @@ import { petById } from '../utils/pets';
 import type { PetShot, ReactionKind } from '../types';
 import ReactionIcon from './ReactionIcons';
 import { playPop, hapticTap } from '../utils/audio';
+import { openAigramProfile } from '@shared/runtime/bridge';
 
 interface Props {
   shot: PetShot;
   cameFromWall: boolean;
+  /** Author of the plate — only present when viewed via wall. */
+  author?: { userId: string; userName?: string; userAvatarUrl?: string } | null;
   myReactions: Set<ReactionKind>;
   onToggleReaction?: (kind: ReactionKind) => void;
   onNew: () => void;
@@ -22,14 +25,19 @@ interface Props {
   petitionCount?: number;
   /** Max petitions allowed (currently 2). */
   petitionMax?: number;
+  /** When this plate is the user's own, allow them to discard it. */
+  onDelete?: () => void;
 }
 
 const REACTION_ORDER: ReactionKind[] = ['heart', 'fire', 'mind', 'eye'];
 
 export default function ResultScreen({
-  shot, cameFromWall, myReactions, onToggleReaction, onNew, onWall, onShare,
-  shareLabel, onPetition, petitionCount = 0, petitionMax = 2,
+  shot, cameFromWall, author, myReactions, onToggleReaction, onNew, onWall, onShare,
+  shareLabel, onPetition, petitionCount = 0, petitionMax = 2, onDelete,
 }: Props) {
+  // Confirmation state for the discard action — first tap arms it,
+  // second tap within 5s confirms. Avoids accidental deletion.
+  const [discardArmed, setDiscardArmed] = useState(false);
   const pet = petById(shot.petId);
   const petitionsLeft = petitionMax - petitionCount;
   const petitionLabel = petitionsLeft <= 0
@@ -49,6 +57,36 @@ export default function ResultScreen({
       <div className="pf-result">
         <h1 className="pf-result__title">{shot.petName}</h1>
         <p className="pf-result__latin"><em>{pet?.latin ?? ''}</em></p>
+
+        {/* Author attribution — only when viewed via wall AND it's
+            someone else's plate. Tap → opens the author's Aigram
+            profile. Avatar + name chip. */}
+        {cameFromWall && author && author.userId !== 'self' && (
+          <button type="button"
+                  className="pf-result__author"
+                  onPointerDown={() => {
+                    playPop(); hapticTap();
+                    openAigramProfile(author.userId);
+                  }}>
+            {author.userAvatarUrl ? (
+              <img className="pf-result__author-avatar"
+                   src={author.userAvatarUrl}
+                   alt=""
+                   draggable={false} />
+            ) : (
+              <span className="pf-result__author-initial">
+                {(author.userName?.[0] ?? '?').toUpperCase()}
+              </span>
+            )}
+            <span className="pf-result__author-meta">
+              <em className="pf-result__author-by">a plate by</em>
+              <span className="pf-result__author-name">
+                {author.userName || `user ${author.userId.slice(0, 6)}`}
+              </span>
+            </span>
+            <span className="pf-result__author-arrow" aria-hidden>›</span>
+          </button>
+        )}
 
         <div className="pf-result__plate" style={{ '--tint': pet?.tint } as React.CSSProperties}>
           <img className="pf-result__img" src={shot.imageUrl} alt={shot.petName} draggable={false} />
@@ -73,6 +111,24 @@ export default function ResultScreen({
             myReactions={myReactions}
             onToggle={onToggleReaction}
           />
+        )}
+
+        {/* Discard own plate — only shown when viewing your own
+            entry via wall. Two-tap confirm to avoid accidents. */}
+        {onDelete && (
+          <button type="button"
+                  className={`pf-result__discard ${discardArmed ? 'is-armed' : ''}`}
+                  onPointerDown={() => {
+                    playPop(); hapticTap();
+                    if (discardArmed) {
+                      onDelete();
+                    } else {
+                      setDiscardArmed(true);
+                      setTimeout(() => setDiscardArmed(false), 5000);
+                    }
+                  }}>
+            <em>{discardArmed ? t('discard_confirm') : t('discard_plate')}</em>
+          </button>
         )}
 
         {/* Action row on freshly-minted results — share + petition. */}

@@ -29,6 +29,11 @@ export default function PetFilter() {
   const [pendingPet, setPendingPet] = useState<string | null>(null);
   const [current, setCurrent] = useState<PetShot | null>(null);
   const [cameFromWall, setCameFromWall] = useState(false);
+  // Author of the plate currently shown on result page (only set
+  // when we navigated in from the wall — own plates don't need it).
+  const [currentAuthor, setCurrentAuthor] = useState<
+    { userId: string; userName?: string; userAvatarUrl?: string } | null
+  >(null);
   const [error, setError] = useState<string>('');
 
   // Source state lifted to parent so navigating to wall + back keeps
@@ -268,6 +273,7 @@ export default function PetFilter() {
   const handleNew = () => {
     playClick();
     setCameFromWall(false);
+    setCurrentAuthor(null);
     setPhase('picker');
   };
 
@@ -282,11 +288,30 @@ export default function PetFilter() {
     setPhase(current ? 'result' : 'picker');
   };
 
-  const handleViewFromWall = (shot: PetShot) => {
+  const handleViewFromWall = (
+    shot: PetShot,
+    author?: { userId: string; userName?: string; userAvatarUrl?: string },
+  ) => {
     playClick();
     setCurrent(shot);
+    setCurrentAuthor(author ?? null);
     setCameFromWall(true);
     setPhase('result');
+  };
+
+  // Delete one of the user's OWN plates. Filters it out of both
+  // the cloud-persisted list and the local mirror, then bounces back
+  // to the wall.
+  const handleDeleteCurrent = () => {
+    if (!current) return;
+    playClick();
+    const nextShots = (savedData?.shots ?? []).filter((s) => s.id !== current.id);
+    setLocalExtra((prev) => prev.filter((s) => s.id !== current.id));
+    persist({ shots: nextShots, reactions: savedData?.reactions });
+    setCurrent(null);
+    setCameFromWall(false);
+    setCurrentAuthor(null);
+    setPhase('wall');
   };
 
   // The processing screen shows the source thumbnail. Compute it from
@@ -343,21 +368,32 @@ export default function PetFilter() {
             onCancel={handleCancelGen}
           />
         )}
-        {phase === 'result' && current && (
-          <ResultScreen
-            shot={current}
-            cameFromWall={cameFromWall}
-            myReactions={reactionsFor(current.id)}
-            onToggleReaction={cameFromWall ? (k) => toggleReaction(current.id, k) : undefined}
-            onNew={handleNew}
-            onWall={handleWall}
-            onShare={handleShare}
-            shareLabel={shareLabel || undefined}
-            onPetition={cameFromWall ? undefined : handlePetition}
-            petitionCount={petitionCount}
-            petitionMax={MAX_PETITIONS}
-          />
-        )}
+        {phase === 'result' && current && (() => {
+          // A plate is "mine" if its id appears in our local discography
+          // (savedData.shots ∪ localExtra). Used to gate delete + author.
+          const mineIds = new Set([
+            ...(savedData?.shots ?? []).map((s) => s.id),
+            ...localExtra.map((s) => s.id),
+          ]);
+          const isMine = mineIds.has(current.id);
+          return (
+            <ResultScreen
+              shot={current}
+              cameFromWall={cameFromWall}
+              author={currentAuthor}
+              myReactions={reactionsFor(current.id)}
+              onToggleReaction={cameFromWall ? (k) => toggleReaction(current.id, k) : undefined}
+              onNew={handleNew}
+              onWall={handleWall}
+              onShare={handleShare}
+              shareLabel={shareLabel || undefined}
+              onPetition={cameFromWall ? undefined : handlePetition}
+              petitionCount={petitionCount}
+              petitionMax={MAX_PETITIONS}
+              onDelete={isMine ? handleDeleteCurrent : undefined}
+            />
+          );
+        })()}
         {phase === 'wall' && (
           <Wall
             community={demoWallEntries.length > 0 ? demoWallEntries : wall.entries}
@@ -369,6 +405,7 @@ export default function PetFilter() {
             onNew={handleNew}
             scope={demoWallEntries.length > 0 ? 'all' : wallScope}
             onScopeChange={setWallScope}
+            diagnostics={wall.diagnostics}
           />
         )}
       </div>

@@ -6,6 +6,7 @@ import { isInAigram, telegramId } from '@shared/runtime/bridge';
 import { fallbackTotal, dominantReaction, reactionAggregateEvent } from '../utils/reactions';
 import ReactionIcon from './ReactionIcons';
 import { petById } from '../utils/pets';
+import type { WallDiagnostics } from '../hooks/useWall';
 import type { PetShot, ReactionKind, WallEntry } from '../types';
 
 export type ScopeMode = 'my' | 'all';
@@ -21,12 +22,19 @@ interface Props {
   onNew: () => void;
   scope: ScopeMode;
   onScopeChange: (next: ScopeMode) => void;
+  /** Wall diagnostics from useWall — shown inline when ?debug=1. */
+  diagnostics?: WallDiagnostics;
 }
 
 export default function Wall({
   community, mine, loaded, myReactions, onBack, onView, onNew, scope, onScopeChange,
+  diagnostics,
 }: Props) {
   const [view, setView] = useState<ViewMode>('list');
+  // ?debug=1 reveals an inline diagnostic panel up top — useful for
+  // production verification of why the wall might look empty.
+  const debugOn = typeof window !== 'undefined'
+    && new URLSearchParams(window.location.search).get('debug') === '1';
 
   const reactionsOf = (id: string): Set<ReactionKind> =>
     myReactions.get(id) ?? new Set<ReactionKind>();
@@ -65,6 +73,44 @@ export default function Wall({
         <h1 className="pf-wall-head__title">{t('wall_heading')}</h1>
         <p className="pf-wall-head__sub"><em>{t('wall_sub')}</em></p>
       </div>
+
+      {debugOn && diagnostics && (
+        <div className="pf-wall-debug" role="note">
+          <div className="pf-wall-debug__title">WALL · DEBUG</div>
+          <div className="pf-wall-debug__row">
+            <span>isInAigram</span>
+            <strong>{String(diagnostics.isInAigram)}</strong>
+          </div>
+          <div className="pf-wall-debug__row">
+            <span>telegram_id</span>
+            <strong>{diagnostics.telegramId || '—'}</strong>
+          </div>
+          <div className="pf-wall-debug__row">
+            <span>session_id</span>
+            <strong>{diagnostics.sessionId?.slice(0, 8) || '—'}…</strong>
+          </div>
+          <div className="pf-wall-debug__row">
+            <span>fetch status</span>
+            <strong>{diagnostics.fetchStatus}</strong>
+          </div>
+          <div className="pf-wall-debug__row">
+            <span>rows returned</span>
+            <strong>{diagnostics.rowsFromPlatform}</strong>
+          </div>
+          <div className="pf-wall-debug__row">
+            <span>parsed shots</span>
+            <strong>{diagnostics.parsedShots}</strong>
+          </div>
+          {diagnostics.userIdsFromPlatform.length > 0 && (
+            <div className="pf-wall-debug__list">
+              user_ids: {diagnostics.userIdsFromPlatform.join(', ')}
+            </div>
+          )}
+          {diagnostics.error && (
+            <div className="pf-wall-debug__err">err: {diagnostics.error}</div>
+          )}
+        </div>
+      )}
 
       {/* Stats banner — three cells separated by hairline rules,
           like the masthead of a Victorian periodical. */}
@@ -224,10 +270,19 @@ function WallRow({ entry, idx, scope, mine, onSelect }: {
           </div>
           <div className="pf-wall-row__latin"><em>{pet?.latin ?? ''}</em></div>
           <div className="pf-wall-row__byline">
-            {scope === 'all' && entry.userName ? (
-              <em>collected by {entry.userName}</em>
-            ) : (
+            {entry.userId === 'self' ? (
               <em>your specimen</em>
+            ) : (
+              // Even if the profile fetch fails (userName undefined),
+              // we still need to attribute the plate to *someone* —
+              // fall back to a short userId so the row never reads
+              // 『your specimen』 for somebody else's work.
+              <em>
+                collected by{' '}
+                <span className="pf-wall-row__by-name">
+                  {entry.userName || `user ${entry.userId.slice(0, 6)}`}
+                </span>
+              </em>
             )}
             {shot.createdAt > 0 && (
               <span className="pf-wall-row__time"><em>· {relativeTime(shot.createdAt)}</em></span>
@@ -284,6 +339,13 @@ function WallTile({ entry, mine, onSelect, scope }: {
         </div>
         <div className="pf-wall-tile__name">{shot.petName}</div>
         <div className="pf-wall-tile__latin"><em>{pet?.latin ?? ''}</em></div>
+        <div className="pf-wall-tile__by">
+          {entry.userId === 'self' ? (
+            <em>yours</em>
+          ) : (
+            <em>by {entry.userName || `user ${entry.userId.slice(0, 6)}`}</em>
+          )}
+        </div>
       </div>
     </li>
   );

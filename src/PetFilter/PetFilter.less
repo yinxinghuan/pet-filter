@@ -1441,6 +1441,101 @@
   flex: 0 0 auto;
 }
 
+// Author chip — shown on result page when viewing someone else's
+// plate via wall. Tap → open Aigram profile.
+.pf-result__author {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 4px;
+  padding: 8px 14px 8px 8px;
+  background: rgba(46, 31, 18, 0.04);
+  border: 0.8px solid @ink-fade;
+  font-family: @font-display;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  text-align: left;
+  transition: background 140ms ease;
+  &:active { background: @paper-deep; }
+}
+.pf-result__author-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid @ink;
+  display: block;
+  object-fit: cover;
+  flex: 0 0 auto;
+}
+.pf-result__author-initial {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid @ink;
+  background: @paper-deep;
+  font-family: @font-display;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  color: @ink;
+}
+.pf-result__author-meta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.15;
+}
+.pf-result__author-by {
+  font-size: 11px;
+  color: @ink-fade;
+  font-style: italic;
+}
+.pf-result__author-name {
+  font-size: 16px;
+  color: @ink;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 14em;
+}
+.pf-result__author-arrow {
+  color: @ink-fade;
+  font-size: 18px;
+  flex: 0 0 auto;
+}
+
+// Discard own plate — quiet sepia text link by default, red when
+// armed for confirmation. Two-tap pattern avoids accidents.
+.pf-result__discard {
+  background: none;
+  border: 0;
+  font-family: @font-display;
+  font-style: italic;
+  font-size: 13px;
+  color: @ink-faint;
+  cursor: pointer;
+  padding: 4px 8px;
+  margin-top: 6px;
+  text-decoration: underline;
+  text-decoration-thickness: 0.5px;
+  text-underline-offset: 3px;
+  text-decoration-color: @ink-faint;
+  -webkit-tap-highlight-color: transparent;
+  &.is-armed {
+    color: @seal;
+    text-decoration-color: @seal;
+    font-weight: 600;
+    animation: pf-discard-pulse 800ms ease-in-out infinite;
+  }
+}
+@keyframes pf-discard-pulse {
+  0%, 100% { opacity: 0.75; }
+  50%      { opacity: 1; }
+}
+
 // ─── Reactions ────────────────────────────────────────────────────────
 .pf-reactions {
   display: flex;
@@ -1633,6 +1728,50 @@
   }
 }
 
+// Debug panel — shown when ?debug=1, surfaces useWall's diagnostics
+// inline so users can see fetch status on a phone without devtools.
+.pf-wall-debug {
+  background: rgba(46, 31, 18, 0.06);
+  border: 1px dashed @ink-soft;
+  padding: 8px 12px;
+  margin: 0 0 14px;
+  font-family: @font-mono;
+  font-size: 10.5px;
+  color: @ink;
+  line-height: 1.5;
+}
+.pf-wall-debug__title {
+  font-family: @font-display;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: @seal;
+  font-weight: 600;
+  margin-bottom: 4px;
+  font-variant: small-caps;
+}
+.pf-wall-debug__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  span { color: @ink-fade; }
+  strong { color: @ink; font-weight: 600; word-break: break-all; text-align: right; }
+}
+.pf-wall-debug__list {
+  color: @ink-soft;
+  padding-top: 4px;
+  margin-top: 4px;
+  border-top: 0.5px dashed @ink-faint;
+  word-break: break-all;
+}
+.pf-wall-debug__err {
+  color: @seal;
+  padding-top: 4px;
+  margin-top: 4px;
+  border-top: 0.5px dashed @seal;
+  word-break: break-all;
+}
+
 // "Alone in the archive" banner — explains why only your own plates
 // show up when nobody else has submitted yet.
 .pf-wall-alone {
@@ -1791,10 +1930,29 @@
   font-size: 10.5px;
   font-style: italic;
   color: @ink-fade;
+  // Each line is a single line — long usernames truncate inside
+  // pf-wall-row__by-name (the embedded span). min-width: 0 on the
+  // parent flex chain enables ellipsis.
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  min-width: 0;
+  > em {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+  }
+}
+.pf-wall-row__by-name {
+  font-weight: 600;
+  color: @ink-soft;
 }
 .pf-wall-row__time {
   margin-left: 2px;
   color: @ink-faint;
+  flex: 0 0 auto;
+  white-space: nowrap;
 }
 .pf-like-badge {
   display: inline-flex;

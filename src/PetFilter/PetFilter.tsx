@@ -189,10 +189,10 @@ export default function PetFilter() {
     setError('');
     playClick();
     setPetitionCount(0);
-    // The Society LLM picks the species during processing — but we
-    // need SOMETHING set for the Processing screen's species label
-    // before the verdict lands. Pick a temporary random one (it'll
-    // be overridden by the real shot when generate() resolves).
+    // Recent species the user has received — bias the next gen away.
+    // Take the last 6 (or fewer if they have fewer); if user has
+    // already received all 12 we wrap and allow repeats.
+    const recentlyReceived = shots.slice(0, 6).map((s) => s.petId);
     const tentative = PETS[Math.floor(Math.random() * PETS.length)].id;
     setPendingPet(tentative);
     setPhase('processing');
@@ -200,7 +200,10 @@ export default function PetFilter() {
       const genSource = source.kind === 'file'
         ? { kind: 'file' as const, file: source.file }
         : { kind: 'url' as const, url: source.url };
-      const shot = await petGen.generate({ source: genSource });
+      const shot = await petGen.generate({
+        source: genSource,
+        avoidPetIds: recentlyReceived,
+      });
       setCurrent(shot);
       setCameFromWall(false);
       setPhase('result');
@@ -299,19 +302,25 @@ export default function PetFilter() {
     setPhase('result');
   };
 
-  // Delete one of the user's OWN plates. Filters it out of both
-  // the cloud-persisted list and the local mirror, then bounces back
-  // to the wall.
-  const handleDeleteCurrent = () => {
-    if (!current) return;
+  // Delete one of the user's OWN plates by id. Filters it out of both
+  // the cloud-persisted list and the local mirror. Used both by the
+  // Result-page discard button (when viewing your own plate) and by
+  // the Wall long-press overlay.
+  const handleDeleteById = (shotId: string) => {
     playClick();
-    const nextShots = (savedData?.shots ?? []).filter((s) => s.id !== current.id);
-    setLocalExtra((prev) => prev.filter((s) => s.id !== current.id));
+    const nextShots = (savedData?.shots ?? []).filter((s) => s.id !== shotId);
+    setLocalExtra((prev) => prev.filter((s) => s.id !== shotId));
     persist({ shots: nextShots, reactions: savedData?.reactions });
-    setCurrent(null);
-    setCameFromWall(false);
-    setCurrentAuthor(null);
-    setPhase('wall');
+    // If we were viewing the deleted plate, bounce back to wall.
+    if (current && current.id === shotId) {
+      setCurrent(null);
+      setCameFromWall(false);
+      setCurrentAuthor(null);
+      setPhase('wall');
+    }
+  };
+  const handleDeleteCurrent = () => {
+    if (current) handleDeleteById(current.id);
   };
 
   // The processing screen shows the source thumbnail. Compute it from
@@ -405,6 +414,7 @@ export default function PetFilter() {
             onNew={handleNew}
             scope={demoWallEntries.length > 0 ? 'all' : wallScope}
             onScopeChange={setWallScope}
+            onDelete={handleDeleteById}
             diagnostics={wall.diagnostics}
           />
         )}

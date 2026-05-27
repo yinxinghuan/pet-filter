@@ -1867,8 +1867,12 @@
   gap: 12px;
   padding: 10px 8px;
   cursor: pointer;
+  position: relative;
   -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
   &:active { background: rgba(60, 38, 16, 0.08); }
+  &.is-armed { background: rgba(138, 46, 34, 0.08); }
 }
 .pf-wall-row__cover {
   --tint: @ink;
@@ -1981,8 +1985,14 @@
 }
 .pf-wall-tile {
   cursor: pointer;
+  position: relative;
   -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
   text-align: center;
+  &.is-armed .pf-wall-tile__cover {
+    box-shadow: inset 0 0 0 2px @seal;
+  }
 }
 .pf-wall-tile__cover {
   --tint: @ink;
@@ -2343,6 +2353,64 @@ body {
   color: @ink;
   -webkit-font-smoothing: antialiased;
 }
+// ── Wall long-press delete overlay ───────────────────────────────────
+// Long-press a row/tile that's mine reveals this — sepia-tinted veil
+// with two explicit buttons (Discard / Keep). Designed to feel like a
+// rubric stamp on the row, not a modal.
+.pf-wall-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px;
+  background: fade(@paper, 92%);
+  border: 1px solid @seal;
+  box-shadow: 0 1px 0 0 @seal, 0 4px 12px rgba(60, 38, 16, 0.18);
+  z-index: 4;
+  animation: pf-overlay-in 140ms ease-out;
+}
+.pf-wall-overlay__label {
+  font-family: @font-display;
+  font-style: italic;
+  font-size: 13px;
+  color: @ink;
+  text-align: center;
+}
+.pf-wall-overlay__actions {
+  display: flex;
+  gap: 8px;
+}
+.pf-wall-overlay__btn {
+  appearance: none;
+  border: 1px solid @ink;
+  background: @paper-deep;
+  font-family: @font-display;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 5px 12px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 90ms ease;
+  &:active { transform: scale(0.96); }
+  em { font-style: italic; }
+  &--confirm {
+    background: @seal;
+    border-color: @seal;
+    color: @paper;
+  }
+  &--cancel {
+    color: @ink;
+  }
+}
+@keyframes pf-overlay-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
 button { font-family: inherit; }
 input { font-family: inherit; }
 * { box-sizing: border-box; }

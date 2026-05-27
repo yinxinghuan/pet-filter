@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import Ticket from './Ticket';
 import { t } from '../i18n';
 import { useGameStats } from '@shared/runtime/useGameStats';
 import { isInAigram, telegramId } from '@shared/runtime/bridge';
 import { fallbackTotal, dominantReaction, reactionAggregateEvent } from '../utils/reactions';
+import { useLongPress } from '../hooks/useLongPress';
+import { playPop, hapticTap } from '../utils/audio';
 import ReactionIcon from './ReactionIcons';
 import { petById } from '../utils/pets';
 import type { WallDiagnostics } from '../hooks/useWall';
@@ -22,15 +24,44 @@ interface Props {
   onNew: () => void;
   scope: ScopeMode;
   onScopeChange: (next: ScopeMode) => void;
+  /** Long-press deletion of own tiles. Called once the user confirms
+   *  via the in-tile overlay. */
+  onDelete?: (shotId: string) => void;
   /** Wall diagnostics from useWall — shown inline when ?debug=1. */
   diagnostics?: WallDiagnostics;
 }
 
 export default function Wall({
   community, mine, loaded, myReactions, onBack, onView, onNew, scope, onScopeChange,
-  diagnostics,
+  onDelete, diagnostics,
 }: Props) {
   const [view, setView] = useState<ViewMode>('list');
+  // Which own-tile is currently displaying the delete overlay. Long-
+  // press arms it; a confirm tap completes deletion, anything else
+  // (overlay timeout, tap outside) cancels. Only one tile can be
+  // armed at a time — arming another auto-cancels the previous.
+  const [armedId, setArmedId] = useState<string | null>(null);
+  const armTimer = useRef<number | null>(null);
+  const armDelete = (id: string) => {
+    playPop();
+    hapticTap();
+    setArmedId(id);
+    if (armTimer.current !== null) window.clearTimeout(armTimer.current);
+    armTimer.current = window.setTimeout(() => setArmedId(null), 5000);
+  };
+  const cancelArm = () => {
+    if (armTimer.current !== null) {
+      window.clearTimeout(armTimer.current);
+      armTimer.current = null;
+    }
+    setArmedId(null);
+  };
+  const confirmDelete = (id: string) => {
+    playPop();
+    hapticTap();
+    onDelete?.(id);
+    cancelArm();
+  };
   // ?debug=1 reveals an inline diagnostic panel up top — useful for
   // production verification of why the wall might look empty.
   const debugOn = typeof window !== 'undefined'
@@ -124,7 +155,7 @@ export default function Wall({
           <span className="pf-wall-stats__l"><em>today</em></span>
         </div>
         <div className="pf-wall-stats__cell">
-          <span className="pf-wall-stats__n">XII</span>
+          <span className="pf-wall-stats__n">XX</span>
           <span className="pf-wall-stats__l"><em>orders</em></span>
         </div>
       </div>
@@ -200,9 +231,25 @@ export default function Wall({
           <span className="pf-wall-empty__hint"><em>— {t('cta_new_pet')} →</em></span>
         </button>
       ) : view === 'list' ? (
-        <ListView entries={entries} reactionsOf={reactionsOf} scope={scope} onSelect={onView} />
+        <ListView entries={entries}
+                  reactionsOf={reactionsOf}
+                  scope={scope}
+                  onSelect={onView}
+                  armedId={armedId}
+                  canDelete={!!onDelete}
+                  onArm={armDelete}
+                  onConfirmDelete={confirmDelete}
+                  onCancelArm={cancelArm} />
       ) : (
-        <GridView entries={entries} reactionsOf={reactionsOf} scope={scope} onSelect={onView} />
+        <GridView entries={entries}
+                  reactionsOf={reactionsOf}
+                  scope={scope}
+                  onSelect={onView}
+                  armedId={armedId}
+                  canDelete={!!onDelete}
+                  onArm={armDelete}
+                  onConfirmDelete={confirmDelete}
+                  onCancelArm={cancelArm} />
       )}
     </Ticket>
   );
@@ -213,16 +260,27 @@ interface ViewProps {
   reactionsOf: (id: string) => Set<ReactionKind>;
   scope: ScopeMode;
   onSelect: (shot: PetShot, author?: { userId: string; userName?: string; userAvatarUrl?: string }) => void;
+  /** Long-press deletion plumbing. */
+  armedId: string | null;
+  canDelete: boolean;
+  onArm: (id: string) => void;
+  onConfirmDelete: (id: string) => void;
+  onCancelArm: () => void;
 }
 
-function ListView({ entries, reactionsOf, scope, onSelect }: ViewProps) {
+function ListView({ entries, reactionsOf, scope, onSelect, armedId, canDelete, onArm, onConfirmDelete, onCancelArm }: ViewProps) {
   return (
     <ul className="pf-wall-list">
       {entries.map((e, i) => (
         <WallRow key={`${e.userId}-${e.shot.id}`}
                  entry={e} idx={i + 1} scope={scope}
                  mine={reactionsOf(e.shot.id)}
-                 onSelect={onSelect} />
+                 onSelect={onSelect}
+                 armed={armedId === e.shot.id}
+                 canDelete={canDelete && e.userId === 'self'}
+                 onArm={onArm}
+                 onConfirmDelete={onConfirmDelete}
+                 onCancelArm={onCancelArm} />
       ))}
     </ul>
   );
@@ -239,12 +297,17 @@ function relativeTime(ts: number): string {
   return `${d}d ago`;
 }
 
-function WallRow({ entry, idx, scope, mine, onSelect }: {
+function WallRow({ entry, idx, scope, mine, onSelect, armed, canDelete, onArm, onConfirmDelete, onCancelArm }: {
   entry: WallEntry;
   idx: number;
   scope: ScopeMode;
   mine: Set<ReactionKind>;
   onSelect: ViewProps['onSelect'];
+  armed: boolean;
+  canDelete: boolean;
+  onArm: (id: string) => void;
+  onConfirmDelete: (id: string) => void;
+  onCancelArm: () => void;
 }) {
   const shot = entry.shot;
   const pet = petById(shot.petId);
@@ -256,10 +319,21 @@ function WallRow({ entry, idx, scope, mine, onSelect }: {
     ? { userId: entry.userId, userName: entry.userName, userAvatarUrl: entry.userAvatarUrl }
     : undefined;
 
+  // Long-press only meaningful for own rows. Non-own rows keep the
+  // original onClick navigation (a simple tap → open the plate).
+  const longPress = useLongPress({
+    onLongPress: () => onArm(shot.id),
+    onShortPress: () => onSelect(shot, authorMeta),
+  });
+
+  const interactive = canDelete
+    ? longPress
+    : { onClick: () => onSelect(shot, authorMeta) };
+
   return (
     <li>
-      <div role="button" tabIndex={0} className="pf-wall-row"
-           onClick={() => onSelect(shot, authorMeta)}>
+      <div role="button" tabIndex={0} className={`pf-wall-row ${armed ? 'is-armed' : ''}`}
+           {...interactive}>
         <div className="pf-wall-row__cover" style={{ '--tint': pet?.tint } as React.CSSProperties}>
           <img className="pf-wall-row__img" src={shot.imageUrl} alt={shot.petName} draggable={false} />
         </div>
@@ -293,30 +367,47 @@ function WallRow({ entry, idx, scope, mine, onSelect }: {
           <ReactionIcon kind={dominant} size={11} />
           <span>{total}</span>
         </span>
+
+        {armed && canDelete && (
+          <DeleteOverlay
+            onConfirm={(ev) => { ev.stopPropagation(); onConfirmDelete(shot.id); }}
+            onCancel={(ev) => { ev.stopPropagation(); onCancelArm(); }}
+          />
+        )}
       </div>
     </li>
   );
 }
 
-function GridView({ entries, reactionsOf, scope, onSelect }: ViewProps) {
+function GridView({ entries, reactionsOf, scope, onSelect, armedId, canDelete, onArm, onConfirmDelete, onCancelArm }: ViewProps) {
   return (
     <ul className="pf-wall-grid">
       {entries.map((e, i) => (
         <WallTile key={`${e.userId}-${e.shot.id}`}
                   entry={e} idx={i + 1} scope={scope}
                   mine={reactionsOf(e.shot.id)}
-                  onSelect={onSelect} />
+                  onSelect={onSelect}
+                  armed={armedId === e.shot.id}
+                  canDelete={canDelete && e.userId === 'self'}
+                  onArm={onArm}
+                  onConfirmDelete={onConfirmDelete}
+                  onCancelArm={onCancelArm} />
       ))}
     </ul>
   );
 }
 
-function WallTile({ entry, mine, onSelect, scope }: {
+function WallTile({ entry, mine, onSelect, scope, armed, canDelete, onArm, onConfirmDelete, onCancelArm }: {
   entry: WallEntry;
   idx: number;
   scope: ScopeMode;
   mine: Set<ReactionKind>;
   onSelect: ViewProps['onSelect'];
+  armed: boolean;
+  canDelete: boolean;
+  onArm: (id: string) => void;
+  onConfirmDelete: (id: string) => void;
+  onCancelArm: () => void;
 }) {
   const shot = entry.shot;
   const pet = petById(shot.petId);
@@ -326,10 +417,19 @@ function WallTile({ entry, mine, onSelect, scope }: {
   const authorMeta = scope === 'all'
     ? { userId: entry.userId, userName: entry.userName, userAvatarUrl: entry.userAvatarUrl }
     : undefined;
+
+  const longPress = useLongPress({
+    onLongPress: () => onArm(shot.id),
+    onShortPress: () => onSelect(shot, authorMeta),
+  });
+  const interactive = canDelete
+    ? longPress
+    : { onClick: () => onSelect(shot, authorMeta) };
+
   return (
     <li>
-      <div role="button" tabIndex={0} className="pf-wall-tile"
-           onClick={() => onSelect(shot, authorMeta)}>
+      <div role="button" tabIndex={0} className={`pf-wall-tile ${armed ? 'is-armed' : ''}`}
+           {...interactive}>
         <div className="pf-wall-tile__cover" style={{ '--tint': pet?.tint } as React.CSSProperties}>
           <img className="pf-wall-tile__img" src={shot.imageUrl} alt={shot.petName} draggable={false} />
           <span className="pf-wall-tile__like">
@@ -346,8 +446,41 @@ function WallTile({ entry, mine, onSelect, scope }: {
             <em>by {entry.userName || `user ${entry.userId.slice(0, 6)}`}</em>
           )}
         </div>
+
+        {armed && canDelete && (
+          <DeleteOverlay
+            onConfirm={(ev) => { ev.stopPropagation(); onConfirmDelete(shot.id); }}
+            onCancel={(ev) => { ev.stopPropagation(); onCancelArm(); }}
+          />
+        )}
       </div>
     </li>
+  );
+}
+
+// Sepia-on-red overlay that veils a row/tile after long-press. Two
+// explicit buttons (Discard / Cancel) — no ambiguity with the parent
+// tile's tap target. Tap outside the overlay → upstream timer dismisses.
+function DeleteOverlay({ onConfirm, onCancel }: {
+  onConfirm: (e: React.PointerEvent | React.MouseEvent) => void;
+  onCancel: (e: React.PointerEvent | React.MouseEvent) => void;
+}) {
+  return (
+    <div className="pf-wall-overlay" onClick={(e) => e.stopPropagation()}>
+      <em className="pf-wall-overlay__label">{t('discard_plate')}?</em>
+      <div className="pf-wall-overlay__actions">
+        <button type="button"
+                className="pf-wall-overlay__btn pf-wall-overlay__btn--confirm"
+                onPointerDown={onConfirm}>
+          <em>{t('discard_yes')}</em>
+        </button>
+        <button type="button"
+                className="pf-wall-overlay__btn pf-wall-overlay__btn--cancel"
+                onPointerDown={onCancel}>
+          <em>{t('discard_cancel')}</em>
+        </button>
+      </div>
+    </div>
   );
 }
 

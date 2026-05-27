@@ -113,24 +113,6 @@ export default function ResultScreen({
           />
         )}
 
-        {/* Discard own plate — only shown when viewing your own
-            entry via wall. Two-tap confirm to avoid accidents. */}
-        {onDelete && (
-          <button type="button"
-                  className={`pf-result__discard ${discardArmed ? 'is-armed' : ''}`}
-                  onPointerDown={() => {
-                    playPop(); hapticTap();
-                    if (discardArmed) {
-                      onDelete();
-                    } else {
-                      setDiscardArmed(true);
-                      setTimeout(() => setDiscardArmed(false), 5000);
-                    }
-                  }}>
-            <em>{discardArmed ? t('discard_confirm') : t('discard_plate')}</em>
-          </button>
-        )}
-
         {/* Action row on freshly-minted results — share + petition. */}
         {!cameFromWall && (
           <div className="pf-result__actions">
@@ -165,6 +147,41 @@ export default function ResultScreen({
                 {petitionLabel}
               </button>
             )}
+          </div>
+        )}
+
+        {/* Action row when viewing OWN plate via wall — share-again
+            + discard. Lets the user re-share an old plate (the share
+            button was previously only on fresh results) and remove
+            ones they don't want anymore. */}
+        {cameFromWall && onDelete && (
+          <div className="pf-result__actions">
+            {onShare && (
+              <button type="button"
+                      className="pf-result__share"
+                      onPointerDown={() => {
+                        if (shareLabel) return;
+                        playPop(); hapticTap();
+                        onShare();
+                      }}
+                      disabled={!!shareLabel}>
+                <span className="pf-result__share-icon" aria-hidden>✎</span>
+                {shareLabel || t('cta_share_again')}
+              </button>
+            )}
+            <button type="button"
+                    className={`pf-result__discard ${discardArmed ? 'is-armed' : ''}`}
+                    onPointerDown={() => {
+                      playPop(); hapticTap();
+                      if (discardArmed) {
+                        onDelete();
+                      } else {
+                        setDiscardArmed(true);
+                        setTimeout(() => setDiscardArmed(false), 5000);
+                      }
+                    }}>
+              <em>{discardArmed ? t('discard_confirm') : t('discard_plate')}</em>
+            </button>
           </div>
         )}
       </div>

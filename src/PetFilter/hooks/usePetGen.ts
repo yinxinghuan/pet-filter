@@ -34,24 +34,33 @@ async function chatOnce(system: string, user: string): Promise<string> {
 // round-trip and guarantees the two are consistent with each other.
 const CLASSIFY_SYSTEM = (
   'You are a 19th-century natural history society scholar examining ' +
-  'an unknown subject. Classify them under ONE of these twelve known ' +
+  'an unknown subject. Classify them under ONE of these twenty known ' +
   'orders. Each order has character:\n\n' +
   '- cat (Felis catus) — domestic, alert, gracefully detached\n' +
   '- dog (Canis familiaris) — loyal, warm, easily moved\n' +
   '- hamster (Mesocricetus auratus) — small, busy, cheerful, hoards\n' +
   '- duck (Anas platyrhynchos) — calm, drifty, faintly comic\n' +
+  '- rabbit (Oryctolagus cuniculus) — cautious, quick to startle, curious\n' +
+  '- goldfish (Carassius auratus) — brief in memory, bright in being\n' +
   '- capybara (Hydrochoerus hydrochaeris) — supremely relaxed, kind\n' +
   '- sloth (Bradypus tridactylus) — slow, dreamy, mossy, benevolent\n' +
   '- parrot (Ara macao) — vivid, conspicuous, intelligent, vocal\n' +
   '- axolotl (Ambystoma mexicanum) — perpetually amused, otherworldly\n' +
   '- hedgehog (Erinaceus europaeus) — cautious, quietly spiky\n' +
+  '- red_panda (Ailurus fulgens) — solitary and gentle, mountain dweller\n' +
+  '- fennec (Vulpes zerda) — small, alert, hearing knows far things\n' +
+  '- otter (Lutra lutra) — playful, dexterous, holds hands in current\n' +
   '- clam (Tridacna gigas) — withdrawn, treasure inside, uncanny\n' +
   '- octopus (Octopus vulgaris) — improvisational, alien, watchful\n' +
-  '- snail (Helix aspersa) — patient, unhurried, carries home\n\n' +
+  '- snail (Helix aspersa) — patient, unhurried, carries home\n' +
+  '- jellyfish (Aurelia aurita) — drifts as the tide allows, translucent\n' +
+  '- pufferfish (Takifugu rubripes) — calm until cornered, surprise of spines\n' +
+  '- frog (Hyla arborea) — musician of dusk, sits still until it does not\n\n' +
   'Output STRICT JSON only, no markdown fences, no commentary:\n' +
   '{"species": "<id>", "verdict": "<one elegant Victorian-voice sentence>"}\n\n' +
-  'Where <id> is exactly one of: cat, dog, hamster, duck, capybara, ' +
-  'sloth, parrot, axolotl, hedgehog, clam, octopus, snail.\n\n' +
+  'Where <id> is exactly one of: cat, dog, hamster, duck, rabbit, ' +
+  'goldfish, capybara, sloth, parrot, axolotl, hedgehog, red_panda, ' +
+  'fennec, otter, clam, octopus, snail, jellyfish, pufferfish, frog.\n\n' +
   'The verdict is a single sentence under 24 words in the voice of ' +
   'a 19th-c. naturalist (e.g. "The faint set of the brow betrays..." ' +
   'or "Something in the bearing recalls..."). Do NOT use second ' +
@@ -59,8 +68,14 @@ const CLASSIFY_SYSTEM = (
   'specimen". No quotes inside the verdict.'
 );
 
-function buildClassifyUser(selfieUrl: string): string {
-  return `The Society is asked to examine the subject. Portrait under consideration: ${selfieUrl}`;
+function buildClassifyUser(selfieUrl: string, avoid: string[]): string {
+  const nonce = Math.random().toString(36).slice(2, 8);
+  let msg = `The Society is asked to examine the subject. Portrait under consideration: ${selfieUrl}`;
+  if (avoid.length > 0) {
+    msg += `\n\nDO NOT classify under any of these orders — they have already been judged for this subject in previous sittings: ${avoid.join(', ')}. Choose a DIFFERENT order this time.`;
+  }
+  msg += `\n\nseed: ${nonce}`;
+  return msg;
 }
 
 interface Classification {
@@ -68,10 +83,9 @@ interface Classification {
   verdict: string;
 }
 
-async function classify(selfieUrl: string): Promise<Classification | null> {
-  const raw = await chatOnce(CLASSIFY_SYSTEM, buildClassifyUser(selfieUrl));
+async function classify(selfieUrl: string, avoid: string[] = []): Promise<Classification | null> {
+  const raw = await chatOnce(CLASSIFY_SYSTEM, buildClassifyUser(selfieUrl, avoid));
   if (!raw) return null;
-  // Strip optional markdown code fences.
   const stripped = raw
     .replace(/^```(?:json)?\s*/i, '')
     .replace(/\s*```\s*$/, '')
@@ -83,6 +97,9 @@ async function classify(selfieUrl: string): Promise<Classification | null> {
   const verdict = (parsed as { verdict?: unknown }).verdict;
   if (typeof species !== 'string' || typeof verdict !== 'string') return null;
   if (!petById(species)) return null;
+  // Defense in depth — if the LLM ignores the avoid list, return
+  // null so the caller falls back to a random unused species.
+  if (avoid.includes(species)) return null;
   return { petId: species, verdict: verdict.trim() };
 }
 
@@ -102,9 +119,61 @@ function buildJudgmentUserPrompt(petName: string, latin: string): string {
   return `The Society has classified the subject under the order ${petName} (${latin}). Write the verdict.`;
 }
 
-function randomPetId(exclude?: string): string {
-  const pool = exclude ? PETS.filter((p) => p.id !== exclude) : PETS;
-  return pool[Math.floor(Math.random() * pool.length)].id;
+function randomPetId(exclude?: string[]): string {
+  const excl = exclude ?? [];
+  // Try excluding the avoid list; if everything is excluded (user has
+  // all species), fall back to the full pool.
+  const pool = PETS.filter((p) => !excl.includes(p.id));
+  const final = pool.length > 0 ? pool : PETS;
+  return final[Math.floor(Math.random() * final.length)].id;
+}
+
+// Same person + same species + same prompt = nearly identical output.
+// Each axis below is decorative (does not break species identity or
+// the EYE ANCHOR) but rotates the CLIP text embedding enough to push
+// img2img into a different region of latent space. We sample one phrase
+// from each axis and append a short variation string to the prompt.
+const POSE_VARIATIONS = [
+  'three-quarter profile view',
+  'frontal observation pose',
+  'head turned slightly to the left',
+  'head turned slightly to the right',
+  'chin tilted gently upward',
+  'gaze cast slightly downward',
+];
+const LIGHT_VARIATIONS = [
+  'soft morning light from the upper left',
+  'warm evening glow from the right',
+  'diffuse overcast museum lighting',
+  'cool north-window naturalist lamp',
+  'amber lantern light, faint shadow',
+];
+const COMPOSITION_VARIATIONS = [
+  'a sprig of botanical specimens (ferns) in the lower margin',
+  'a small marginal vignette of leaves in one corner',
+  'a faint hand-written annotation in the lower right corner (no readable text)',
+  'a subtle wash of background landscape (distant hills, low horizon)',
+  'a single dried-flower study in the corner',
+  'a stippled empty background, archival emptiness',
+];
+const RENDER_VARIATIONS = [
+  'denser cross-hatching technique',
+  'looser softer watercolor wash dominant',
+  'bolder ink contour line',
+  'finer stipple shading on the cheek',
+  'gentle dry-brush highlights along the brow',
+];
+
+function pickOne<T>(arr: T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function buildVariationSuffix(): string {
+  return (
+    ` Compositional variation for this plate: ${pickOne(POSE_VARIATIONS)}; ` +
+    `${pickOne(LIGHT_VARIATIONS)}; ${pickOne(COMPOSITION_VARIATIONS)}; ` +
+    `${pickOne(RENDER_VARIATIONS)}.`
+  );
 }
 
 export type Stage = '' | 'uploading' | 'morphing' | 'rendering' | 'settling';
@@ -118,6 +187,10 @@ interface GenInput {
    *  this species. Used by the petition flow where the caller picks
    *  a random non-current species to challenge the previous verdict. */
   forcePetId?: string;
+  /** Species the user has already received — bias both the LLM AND
+   *  the random fallback away from these so repeated submissions
+   *  don't return 『three parrots in a row』. Pass petIds. */
+  avoidPetIds?: string[];
 }
 
 export class CancelledError extends Error {
@@ -156,7 +229,7 @@ export function usePetGen(): UsePetGen {
   }
 
   const generate = useCallback(
-    async ({ source, forcePetId }: GenInput): Promise<PetShot> => {
+    async ({ source, forcePetId, avoidPetIds = [] }: GenInput): Promise<PetShot> => {
       if (inFlight.current) throw new Error('pet-gen: already in flight');
       inFlight.current = true;
       cancelRef.current = false;
@@ -192,16 +265,16 @@ export function usePetGen(): UsePetGen {
           // species. Run in parallel with img2img to save wall-clock.
         } else {
           // Classification path — LLM picks species + writes verdict
-          // in one call. Falls back to random + simple judgment if
-          // the model fails to return valid JSON.
-          const cls = await classify(selfieUrl).catch(() => null);
+          // in one call. Passes the avoid list so repeated submissions
+          // get different species. Falls back to random (also excluding
+          // the avoid list) + simple judgment if the model fails.
+          const cls = await classify(selfieUrl, avoidPetIds).catch(() => null);
           checkCancel();
           if (cls) {
             petId = cls.petId;
             judgmentText = cls.verdict;
           } else {
-            petId = randomPetId();
-            // judgmentText filled by the parallel chat below.
+            petId = randomPetId(avoidPetIds);
           }
         }
 
@@ -214,8 +287,9 @@ export function usePetGen(): UsePetGen {
         const judgmentPromise = needSeparateJudgment
           ? chatOnce(JUDGMENT_SYSTEM, buildJudgmentUserPrompt(pet.name, pet.latin))
           : Promise.resolve('');
+        const variedPrompt = pet.prompt + buildVariationSuffix();
         const [imageUrl, fallbackJudgment] = await Promise.all([
-          genImg({ prompt: pet.prompt, ref_url: selfieUrl }),
+          genImg({ prompt: variedPrompt, ref_url: selfieUrl }),
           judgmentPromise,
         ]);
         checkCancel();

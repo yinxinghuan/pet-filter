@@ -194,6 +194,64 @@ SPECIES = {
                  "the human head, long sensitive eye-stalks lifting up "
                  "from the temples, the human face glistening moist "
                  "and calm."),
+
+    # ── Expansion v2 — 8 more orders (plates XIII–XX) ──
+    "rabbit":   ("a soft brown rabbit (Oryctolagus cuniculus), tall "
+                 "upright ears, twitching pink nose, gentle whiskers, "
+                 "round dark eyes.",
+                 "soft brown rabbit fur across the cheeks, tall upright "
+                 "rabbit ears rising from the head, a small twitching "
+                 "pink nose, slight buck-toothed mouth."),
+    "goldfish": ("a single goldfish (Carassius auratus), shimmering "
+                 "metallic orange-gold scales, flowing fan-shaped fins, "
+                 "round eyes.",
+                 "shimmering metallic orange-gold fish scales on the "
+                 "cheeks and head, flowing fan-shaped dorsal and caudal "
+                 "fins rising from where the hair was, faint gill slits, "
+                 "a pursed round fish mouth."),
+    "red_panda":("a red panda (Ailurus fulgens), rich rust-red fur, "
+                 "cream-white facial markings, small triangular ears "
+                 "tipped in white, gentle pointed snout.",
+                 "rich rust-red red-panda fur on the cheeks with cream-"
+                 "white markings around the cheeks and brow, small "
+                 "triangular ears edged in white on the head, a soft "
+                 "pointed snout with a small black nose."),
+    "fennec":   ("a fennec fox (Vulpes zerda), pale sandy-cream fur, "
+                 "enormous oversized pointed ears, delicate pointed "
+                 "muzzle, alert dark eyes.",
+                 "pale sandy-cream fennec fox fur on the cheeks, "
+                 "ENORMOUS oversized pointed fennec ears rising from "
+                 "the head, a small dark nose, delicate pointed muzzle."),
+    "otter":    ("a river otter (Lutra lutra), sleek wet-looking dark-"
+                 "brown fur, prominent white whiskers, small rounded "
+                 "ears, slightly buck-toothed smile.",
+                 "sleek wet-looking dark-brown otter fur on the cheeks "
+                 "and neck, small rounded otter ears flat against the "
+                 "head, prominent stiff white whiskers fanning from "
+                 "the upper lip, a round dark nose."),
+    "jellyfish":("a moon jellyfish (Aurelia aurita), translucent pale-"
+                 "blue bell, long ghostly tentacles trailing down, faint "
+                 "bioluminescent veins.",
+                 "a large translucent pale-blue jellyfish bell crowning "
+                 "the head like a luminous hat, long ghostly tentacles "
+                 "cascading down around the face and shoulders, pale "
+                 "translucent skin with faint blue-violet bioluminescent "
+                 "veins on the cheeks."),
+    "pufferfish":("an inflated pufferfish (Takifugu rubripes), mottled "
+                 "olive-tan-and-cream spiny skin, small pursed round "
+                 "mouth, large round eyes.",
+                 "an inflated round pufferfish form — mottled olive-tan-"
+                 "and-cream pufferfish skin covering the entire head, "
+                 "short sharp spines on the cheeks and brow, a small "
+                 "round pursed pufferfish mouth, faint side fins behind "
+                 "the cheeks."),
+    "frog":     ("a green tree frog (Hyla arborea), smooth glossy bright-"
+                 "green skin, wide perpetual smile, sticky-pad fingers, "
+                 "round dark eyes.",
+                 "smooth glossy bright-green frog skin replacing all "
+                 "skin on face and neck, a wide perpetual frog smile "
+                 "across the lower face, faint speckled markings on the "
+                 "cheeks, the throat membrane subtly inflated."),
 }
 
 # Which 3 species become hybrid demos for the frontispiece cycle.
@@ -245,6 +303,14 @@ def main():
             "kind": "demo",
             "sid": sid,
         })
+
+    # Skip jobs whose output already exists — idempotent reruns only
+    # generate missing files. Set SKIP_EXISTING=0 to force regenerate.
+    skip_existing = os.environ.get("SKIP_EXISTING", "1") != "0"
+    if skip_existing:
+        before = len(jobs)
+        jobs = [j for j in jobs if not os.path.exists(os.path.join(HERE, j["out"]))]
+        print(f"\nSkipping {before - len(jobs)} jobs that already exist on disk")
 
     print(f"\nTotal: {len(jobs)} images to generate (~{len(jobs) * 80 // 60} min)")
     last_call = 0

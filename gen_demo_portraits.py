@@ -145,9 +145,17 @@ def download(url: str, out_path: str) -> None:
 # expression suggests…") still produces a coherent portrait.
 
 STYLE_SUFFIX = (
-    " Soft pastel studio backdrop, gentle rim light, centered portrait "
-    "composition, 1:1 aspect, photo-real but slightly stylized, "
-    "expressive eyes, calm intelligent face. No text, no logos."
+    " Rendered as a 19th-century zoological plate from a natural history "
+    "book — hand-colored lithograph or engraving, fine pen-and-ink "
+    "linework with soft watercolor wash, in the painterly tradition of "
+    "John James Audubon and Ernst Haeckel. Centered specimen study, "
+    "head-and-shoulders bust, naturalist's observation pose. Aged cream "
+    "paper background with faint foxing and subtle paper texture, muted "
+    "earthen palette of sepia, sage green, dusty rose, and ivory, with "
+    "hand-painted color washes over crisp linework. Painterly, "
+    "traditional, no plastic sheen, no photography, no 3D render, no "
+    "neon, no digital glow. 1:1 aspect, no text, no labels, no logos, "
+    "no border."
 )
 
 PORTRAITS = [

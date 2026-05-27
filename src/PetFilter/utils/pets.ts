@@ -23,9 +23,24 @@ export interface Pet {
   tint: string;
 }
 
-// Shared style suffix appended to every pet prompt to keep aesthetic
-// uniform across the wall. Soft studio backdrop + AlterU-leaning pink.
-const STYLE_SUFFIX = ' Soft pastel studio backdrop, gentle rim light, centered portrait composition, 1:1 aspect, photo-real but slightly stylized, retain the recognizable face structure and expression of the reference subject, no text, no logos.';
+// Shared style suffix appended to every pet prompt — defines the
+// aesthetic the entire game is themed around: 19th-c. natural history
+// plate. Audubon / Haeckel / Buffon school. Hand-painted, NOT photo-
+// realistic. Keeping this consistent across all 12 species so the wall
+// looks like a single bound volume.
+const STYLE_SUFFIX = (
+  ' Rendered as a 19th-century zoological plate from a natural history book — ' +
+  'hand-colored lithograph or engraving, fine pen-and-ink linework with soft ' +
+  'watercolor wash, in the painterly tradition of John James Audubon and Ernst ' +
+  'Haeckel. Centered specimen study, head-and-shoulders bust, naturalist' +
+  "'s observation pose. Aged cream paper background with faint foxing and " +
+  'subtle paper texture, muted earthen palette of sepia, sage green, dusty ' +
+  'rose, and ivory, with hand-painted color washes over crisp linework. ' +
+  'Retain the recognizable facial structure and expression of the reference ' +
+  'subject, translated into illustration rather than photograph. ' +
+  'Painterly, traditional, no plastic sheen, no photography, no 3D render, ' +
+  'no neon, no digital glow. 1:1 aspect, no text, no labels, no logos, no border.'
+);
 
 export const PETS: Pet[] = [
   // ─── Everyday ───

@@ -11,10 +11,11 @@ interface Props {
    *  pre-uploaded URL (typically the user's Aigram avatar). */
   source: { kind: 'file'; file: File; previewUrl: string } | { kind: 'url'; url: string } | null;
   onSourceChange: (next: { kind: 'file'; file: File; previewUrl: string } | { kind: 'url'; url: string } | null) => void;
-  /** Whether we're on platform AND fetched a real user avatar. Drives
-   *  copy: "your avatar is on file" vs. "submit a likeness please". */
+  /** Whether we're on platform AND fetched a real user avatar. */
   hasAvatarOnFile: boolean;
-  onSubmit: (petId: string) => void;
+  /** Caller picks the species (random or feature-matched) — picker
+   *  doesn't choose it here. Tiles are catalog, not selection. */
+  onSubmit: () => void;
   onWall: () => void;
   errorLabel?: string;
 }
@@ -22,11 +23,6 @@ interface Props {
 export default function PickerScreen({
   source, onSourceChange, hasAvatarOnFile, onSubmit, onWall, errorLabel,
 }: Props) {
-  const [pickedPet, setPickedPet] = useState<string | null>(null);
-
-  // When a fresh file is picked, swap source (parent owns it). Revoking
-  // the old preview URL is delegated to the parent so navigating away
-  // doesn't lose the photo.
   const onFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     playClick();
     const file = e.target.files?.[0];
@@ -36,18 +32,15 @@ export default function PickerScreen({
     e.target.value = '';
   };
 
-  const ready = !!source && !!pickedPet;
+  // The Society decides the species — user just provides the likeness.
+  const ready = !!source;
   const handleTransfigure = () => {
-    if (!source || !pickedPet) return;
-    onSubmit(pickedPet);
+    if (!source) return;
+    onSubmit();
   };
-
-  // Disabled-CTA copy explains WHICH input is missing.
-  const disabledReasonKey: 'cta_need_specimen' | 'cta_need_species' | null =
-    !source ? 'cta_need_specimen' : !pickedPet ? 'cta_need_species' : null;
   const heroLabel = ready
     ? t('cta_transfigure')
-    : disabledReasonKey ? t(disabledReasonKey) : t('cta_transfigure_pending');
+    : t('cta_need_specimen');
 
   const groups: Record<string, Pet[]> = {
     everyday: PETS.filter((p) => p.category === 'everyday'),
@@ -143,20 +136,20 @@ export default function PickerScreen({
         <span className="pf-pick-head__sub"><em>{t('pick_sub')}</em></span>
       </div>
 
+      {/* Catalog of known species — not a chooser. The Society
+          determines the assignment from the user's likeness once they
+          tap Reclassify. */}
+      <p className="pf-catalog-note"><em>{t('catalog_note')}</em></p>
+
       {(['everyday', 'wholesome', 'uncanny'] as const).map((cat) => (
         <section key={cat} className="pf-pet-section">
           <header className="pf-pet-section__head">
             <span className="pf-pet-section__name">{tCategory(cat)}</span>
             <span className="pf-pet-section__rule" aria-hidden />
           </header>
-          <ul className="pf-pet-grid">
+          <ul className="pf-pet-grid pf-pet-grid--catalog">
             {groups[cat].map((pet) => (
-              <PetTile
-                key={pet.id}
-                pet={pet}
-                active={pickedPet === pet.id}
-                onPick={(id) => { playClick(); setPickedPet(id); }}
-              />
+              <PetTile key={pet.id} pet={pet} />
             ))}
           </ul>
         </section>
@@ -167,17 +160,15 @@ export default function PickerScreen({
   );
 }
 
-function PetTile({ pet, active, onPick }: { pet: Pet; active: boolean; onPick: (id: string) => void }) {
-  // Image cover when generated; SVG engraving as fallback (transparent
-  // on broken-load via onError — the SVG underneath stays visible).
+// Catalog-only — non-interactive plate showing one of the 12 species
+// the Society can determine you as. Cover image + caption.
+function PetTile({ pet }: { pet: Pet }) {
   const [imgFailed, setImgFailed] = useState(false);
   return (
     <li>
-      <button
-        type="button"
-        className={`pf-pet-tile ${active ? 'is-active' : ''}`}
+      <div
+        className="pf-pet-tile pf-pet-tile--catalog"
         style={{ '--tile-tint': pet.tint } as React.CSSProperties}
-        onPointerDown={() => onPick(pet.id)}
       >
         <span className="pf-pet-tile__plate">Pl. {pet.plate}</span>
         <div className="pf-pet-tile__icon" aria-hidden>
@@ -193,7 +184,7 @@ function PetTile({ pet, active, onPick }: { pet: Pet; active: boolean; onPick: (
         </div>
         <div className="pf-pet-tile__name">{pet.name}</div>
         <div className="pf-pet-tile__latin"><em>{pet.latin}</em></div>
-      </button>
+      </div>
     </li>
   );
 }

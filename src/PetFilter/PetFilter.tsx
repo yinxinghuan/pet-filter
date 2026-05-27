@@ -10,6 +10,7 @@ import { usePetGen } from './hooks/usePetGen';
 import { useWall } from './hooks/useWall';
 import { t } from './i18n';
 import { playClick, playReveal, unlockAudio } from './utils/audio';
+import { PETS } from './utils/pets';
 import type { Phase, PetSave, PetShot, ReactionKind } from './types';
 import './PetFilter.less';
 
@@ -139,10 +140,13 @@ export default function PetFilter() {
   };
 
   // ─── Phase transitions ────────────────────────────────────────────
-  const handleSubmit = async (petId: string) => {
+  const handleSubmit = async () => {
     if (!source) return;
     setError('');
     playClick();
+    // The Society auto-assigns the species. Random for now; could
+    // become feature-matched against the photo (Vision API) later.
+    const petId = PETS[Math.floor(Math.random() * PETS.length)].id;
     setPendingPet(petId);
     setPhase('processing');
     try {
@@ -234,7 +238,7 @@ export default function PetFilter() {
             source={source}
             onSourceChange={setSource}
             hasAvatarOnFile={!!avatarUrl}
-            onSubmit={handleSubmit}
+            onSubmit={() => { void handleSubmit(); }}
             onWall={handleWall}
             errorLabel={error || undefined}
           />

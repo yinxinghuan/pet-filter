@@ -185,8 +185,11 @@
 <div class="meta">
   <span>SOURCE · LIVE GAME · ?demo=&lt;phase&gt;&amp;locale=&lt;ll&gt;</span>
   <div class="locale" role="tablist" aria-label="locale">
-    <button id="loc-en" class="is-active" role="tab">English</button>
-    <button id="loc-zh" role="tab">中文</button>
+    <button data-loc="en" class="is-active" role="tab">English</button>
+    <button data-loc="zh" role="tab">中文</button>
+    <button data-loc="ja" role="tab">日本語</button>
+    <button data-loc="ko" role="tab">한국어</button>
+    <button data-loc="es" role="tab">Español</button>
   </div>
 </div>
 
@@ -269,17 +272,19 @@
 </div>
 
 <script>
-  // Locale toggle — flips all iframes between EN and ZH.
+  // Locale toggle — flips all iframes between locales.
   const setLocale = (loc) => {
     document.querySelectorAll('iframe[data-phase]').forEach((f) => {
       const phase = f.getAttribute('data-phase');
       f.src = `./?demo=${phase}&locale=${loc}`;
     });
-    document.getElementById('loc-en').classList.toggle('is-active', loc === 'en');
-    document.getElementById('loc-zh').classList.toggle('is-active', loc === 'zh');
+    document.querySelectorAll('.locale button[data-loc]').forEach((b) => {
+      b.classList.toggle('is-active', b.getAttribute('data-loc') === loc);
+    });
   };
-  document.getElementById('loc-en').addEventListener('click', () => setLocale('en'));
-  document.getElementById('loc-zh').addEventListener('click', () => setLocale('zh'));
+  document.querySelectorAll('.locale button[data-loc]').forEach((b) => {
+    b.addEventListener('click', () => setLocale(b.getAttribute('data-loc')));
+  });
   setLocale('en');
 </script>
 </body>

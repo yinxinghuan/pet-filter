@@ -2,6 +2,11 @@
 // understated, italic Latin, no shouting capitals. Only en + zh for v1.
 
 function detectLocale(): 'zh' | 'en' {
+  // ?locale=en|zh — highest priority, useful for design QA + screenshots
+  if (typeof window !== 'undefined') {
+    const q = new URLSearchParams(window.location.search).get('locale');
+    if (q === 'en' || q === 'zh') return q;
+  }
   const override = typeof localStorage !== 'undefined'
     ? localStorage.getItem('game_locale')
     : null;

@@ -125,12 +125,7 @@ function FrontDemo({ onOpen }: { onOpen: () => void }) {
       <div className="pf-front__portrait-cap">
         <div className="pf-front__portrait-name">{pet?.name}</div>
         <div className="pf-front__portrait-latin"><em>{pet?.latin}</em></div>
-      </div>
-      {/* Visible button affordance — replaces the small pulsing italic
-          hint. A stronger underlined CTA below the plate. */}
-      <div className="pf-front__begin-cta">
-        <span className="pf-front__begin-arrow" aria-hidden>☞</span>
-        <span className="pf-front__begin-label">{t('front_cta_open')}</span>
+        <div className="pf-front__portrait-hint"><em>tap the plate · or open below</em></div>
       </div>
     </button>
   );

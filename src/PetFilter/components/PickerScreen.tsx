@@ -12,12 +12,24 @@ interface Props {
   onSubmit: () => void;
   onWall: () => void;
   onBestiary: () => void;
+  /** Unix-ms timestamp of the user's most recent verdict, or 0 if
+   *  they've never submitted. Used for the soft daily-ritual badge. */
+  lastSubmissionAt: number;
   errorLabel?: string;
 }
 
 export default function PickerScreen({
-  source, onSourceChange, hasAvatarOnFile, onSubmit, onWall, onBestiary, errorLabel,
+  source, onSourceChange, hasAvatarOnFile, onSubmit, onWall, onBestiary,
+  lastSubmissionAt, errorLabel,
 }: Props) {
+  // Soft daily-ritual badge. If the user submitted in the last 24h,
+  // show a small "your last application was received" line above the
+  // hero — purely informational, doesn't block.
+  const oneDayMs = 24 * 60 * 60 * 1000;
+  const sinceLast = lastSubmissionAt > 0 ? Date.now() - lastSubmissionAt : Infinity;
+  const recentSubmission = sinceLast < oneDayMs;
+  const hoursAgo = Math.floor(sinceLast / (1000 * 60 * 60));
+  const minutesAgo = Math.floor(sinceLast / (1000 * 60));
   const onFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     playClick();
     const file = e.target.files?.[0];
@@ -56,6 +68,22 @@ export default function PickerScreen({
       footerHeroDisabled={!ready}
       footerLeftAction={{ label: t('cta_wall'), onClick: onWall }}
     >
+      {recentSubmission && (
+        <div className="pf-daily-badge" role="note">
+          <span className="pf-daily-badge__icon" aria-hidden>✶</span>
+          <span className="pf-daily-badge__text">
+            <em>{t('daily_recent')}</em>
+            {' · '}
+            <span className="pf-daily-badge__time">
+              {hoursAgo > 0 ? `${hoursAgo}h ago` : `${minutesAgo}m ago`}
+            </span>
+          </span>
+          <span className="pf-daily-badge__hint">
+            <em>{t('daily_next')}</em>
+          </span>
+        </div>
+      )}
+
       <h1 className="pf-hero">
         <span className="pf-dropcap">{t('hero_dropcap')}</span>
         {t('hero_title')}

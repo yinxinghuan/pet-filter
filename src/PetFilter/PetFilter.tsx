@@ -305,6 +305,7 @@ export default function PetFilter() {
             onSubmit={() => { void handleSubmit(); }}
             onWall={handleWall}
             onBestiary={() => { playClick(); setPhase('bestiary'); }}
+            lastSubmissionAt={shots[0]?.createdAt ?? 0}
             errorLabel={error || undefined}
           />
         )}

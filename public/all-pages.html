@@ -90,11 +90,11 @@
 
   .grid {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(6, 1fr);
     gap: 18px;
     margin: 0 0 32px;
   }
-  @media (max-width: 1640px) { .grid { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 1920px) { .grid { grid-template-columns: repeat(3, 1fr); } }
   @media (max-width: 1080px) { .grid { grid-template-columns: repeat(2, 1fr); } }
   @media (max-width:  640px) { .grid { grid-template-columns: 1fr; } }
 
@@ -207,11 +207,23 @@
     <header class="phase__hd">
       <span class="phase__n">II</span>
       <span class="phase__nm">Picker</span>
-      <span class="phase__sb">specimen + catalog</span>
+      <span class="phase__sb">upload only</span>
     </header>
     <div class="phone">
       <iframe data-phase="picker" title="Picker" loading="lazy"></iframe>
-      <span class="phone__hint">scroll · catalog · live</span>
+      <span class="phone__hint">tap upload · live</span>
+    </div>
+  </article>
+
+  <article class="phase">
+    <header class="phase__hd">
+      <span class="phase__n">II·b</span>
+      <span class="phase__nm">Bestiary</span>
+      <span class="phase__sb">browse 12 orders</span>
+    </header>
+    <div class="phone">
+      <iframe data-phase="bestiary" title="Bestiary" loading="lazy"></iframe>
+      <span class="phone__hint">scroll · 12 plates · live</span>
     </div>
   </article>
 

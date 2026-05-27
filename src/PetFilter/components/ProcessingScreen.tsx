@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import Ticket from './Ticket';
 import { t } from '../i18n';
 import type { Stage } from '../hooks/usePetGen';
-import { petById } from '../utils/pets';
+import { petById, PETS } from '../utils/pets';
 import { CaliperFrame } from './ProcessingInstruments';
 
 interface Props {
@@ -24,6 +24,17 @@ export default function ProcessingScreen({
     const id = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(id);
   }, []);
+
+  // The Society publicly considers each of the 12 known orders during
+  // the wait — uses the real generated cover plates so the user sees
+  // beautiful Audubon illustrations rolling by. Builds anticipation
+  // and answers 『what could I become?』 in the most engaging moment.
+  const [considerIdx, setConsiderIdx] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setConsiderIdx((i) => (i + 1) % PETS.length), 3200);
+    return () => clearInterval(id);
+  }, []);
+  const considered = PETS[considerIdx];
 
   const elapsedMs = startedAt > 0 ? Math.max(0, now - startedAt) : 0;
   const elapsedS = Math.floor(elapsedMs / 1000);
@@ -63,6 +74,24 @@ export default function ProcessingScreen({
         </CaliperFrame>
 
         <div className="pf-proc__step"><em>{stageLabel}</em></div>
+
+        {/* The Society publicly considers each known order in turn —
+            shows the actual generated cover plate rotating through all
+            12 species with name + Latin underneath. */}
+        <div className="pf-proc__consider">
+          <div className="pf-proc__consider-label">
+            <em>{t('proc_considering')}</em>
+          </div>
+          <div className="pf-proc__consider-plate" key={considered.id}
+               style={{ '--tint': considered.tint } as React.CSSProperties}>
+            <img className="pf-proc__consider-img"
+                 src={`/pet-filter/cover_${considered.id}.jpg`}
+                 alt={considered.name}
+                 draggable={false} />
+          </div>
+          <div className="pf-proc__consider-name">{considered.name}</div>
+          <div className="pf-proc__consider-latin"><em>{considered.latin}</em></div>
+        </div>
 
         {/* Thin engraved progress rule — ink only, no brass. */}
         <div className="pf-proc__progress" aria-label={`${Math.round(stage99 * 100)} percent`}>

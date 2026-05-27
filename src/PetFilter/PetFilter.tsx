@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useGameSave } from '@shared/save';
 import { useGameEvent, callAigramAPI, isInAigram, telegramId, type AigramResponse } from '@shared/runtime';
+import FrontispiecePage from './components/FrontispiecePage';
 import PickerScreen from './components/PickerScreen';
 import ProcessingScreen from './components/ProcessingScreen';
 import ResultScreen from './components/ResultScreen';
@@ -22,7 +23,7 @@ export default function PetFilter() {
   const petGen = usePetGen();
   const wall = useWall();
 
-  const [phase, setPhase] = useState<Phase>('picker');
+  const [phase, setPhase] = useState<Phase>('frontispiece');
   const [pendingPet, setPendingPet] = useState<string | null>(null);
   const [current, setCurrent] = useState<PetShot | null>(null);
   const [cameFromWall, setCameFromWall] = useState(false);
@@ -166,9 +167,24 @@ export default function PetFilter() {
     : source.kind === 'file' ? source.previewUrl
     : source.url;
 
+  const handleOpenVolume = () => {
+    playClick();
+    setPhase('picker');
+  };
+
   return (
     <div className="pf-root">
       <div className="pf-frame">
+        {phase === 'frontispiece' && (
+          <FrontispiecePage
+            entries={wall.entries}
+            myShots={shots}
+            loaded={wall.loaded}
+            onOpen={handleOpenVolume}
+            onArchive={handleWall}
+            onView={handleViewFromWall}
+          />
+        )}
         {phase === 'picker' && (
           <PickerScreen
             source={source}

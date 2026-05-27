@@ -1,20 +1,14 @@
-import { useState } from 'react';
 import Ticket from './Ticket';
 import { PETS, type Pet } from '../utils/pets';
-import { t, tCategory } from '../i18n';
+import { t } from '../i18n';
 import { previewURL } from '../utils/selfie';
 import { playClick } from '../utils/audio';
 import PetEngraving from './PetEngraving';
 
 interface Props {
-  /** Source of the specimen photo. Either a freshly uploaded file OR a
-   *  pre-uploaded URL (typically the user's Aigram avatar). */
   source: { kind: 'file'; file: File; previewUrl: string } | { kind: 'url'; url: string } | null;
   onSourceChange: (next: { kind: 'file'; file: File; previewUrl: string } | { kind: 'url'; url: string } | null) => void;
-  /** Whether we're on platform AND fetched a real user avatar. */
   hasAvatarOnFile: boolean;
-  /** Caller picks the species (random or feature-matched) — picker
-   *  doesn't choose it here. Tiles are catalog, not selection. */
   onSubmit: () => void;
   onWall: () => void;
   errorLabel?: string;
@@ -32,7 +26,6 @@ export default function PickerScreen({
     e.target.value = '';
   };
 
-  // The Society decides the species — user just provides the likeness.
   const ready = !!source;
   const handleTransfigure = () => {
     if (!source) return;
@@ -42,17 +35,10 @@ export default function PickerScreen({
     ? t('cta_transfigure')
     : t('cta_need_specimen');
 
-  const groups: Record<string, Pet[]> = {
-    everyday: PETS.filter((p) => p.category === 'everyday'),
-    wholesome: PETS.filter((p) => p.category === 'wholesome'),
-    uncanny: PETS.filter((p) => p.category === 'uncanny'),
-  };
-
   const specimenSrc = !source ? null
     : source.kind === 'file' ? source.previewUrl
     : source.url;
 
-  // Caption + CTA copy keys depend on whether a source is on file.
   const captionKey: 'upload_caption_avatar_default' | 'upload_caption_ready' | 'upload_caption_empty' =
     source ? (source.kind === 'url' ? 'upload_caption_avatar_default' : 'upload_caption_ready')
            : (hasAvatarOnFile ? 'upload_caption_ready' : 'upload_caption_empty');
@@ -75,8 +61,6 @@ export default function PickerScreen({
       </h1>
       <p className="pf-deck"><em>{t('hero_sub')}</em></p>
 
-      {/* Persistent error bar — re-entry from a failed gen leaves the
-          error visible here until the user starts a new attempt. */}
       {errorLabel ? (
         <div className="pf-error pf-error--persistent" role="alert">
           <span className="pf-error__icon" aria-hidden>✶</span>
@@ -88,117 +72,85 @@ export default function PickerScreen({
         <span className="pf-fleuron">❦</span>
       </div>
 
-      {/* Specimen — avatar pre-filled or upload. The slot itself is
-          a tap target via nested file input when no specimen on file. */}
-      <section className="pf-specimen">
+      {/* Specimen — the only required input. Centered, prominent. */}
+      <section className="pf-specimen pf-specimen--centered">
         <div className="pf-specimen__label">{t('upload_label')}</div>
-        <div className="pf-specimen__inner">
-          {specimenSrc ? (
-            <div className="pf-specimen__slot">
-              <img className="pf-specimen__img" src={specimenSrc} alt="" draggable={false} />
-            </div>
-          ) : (
-            <label className="pf-specimen__slot pf-specimen__slot--empty">
-              <input
-                type="file"
-                accept="image/*"
-                name="pf-photo-slot"
-                className="pf-specimen__slot-file"
-                onChange={onFile}
-              />
-              <UploadGlyph />
-              <span className="pf-specimen__slot-hint"><em>{t('upload_tap_hint')}</em></span>
-            </label>
-          )}
-          <div className="pf-specimen__side">
-            <label className="pf-cta-link">
-              <input
-                type="file"
-                accept="image/*"
-                name="pf-photo"
-                className="pf-cta-link__file"
-                onChange={onFile}
-              />
-              <span className="pf-cta-link__text">{t(ctaKey)}</span>
-            </label>
-            <p className="pf-specimen__caption"><em>{t(captionKey)}</em></p>
-          </div>
-        </div>
-      </section>
 
+        {specimenSrc ? (
+          <div className="pf-specimen__slot pf-specimen__slot--big">
+            <img className="pf-specimen__img" src={specimenSrc} alt="" draggable={false} />
+          </div>
+        ) : (
+          <label className="pf-specimen__slot pf-specimen__slot--big pf-specimen__slot--empty">
+            <input
+              type="file"
+              accept="image/*"
+              name="pf-photo-slot"
+              className="pf-specimen__slot-file"
+              onChange={onFile}
+            />
+            <UploadGlyph />
+            <span className="pf-specimen__slot-hint"><em>{t('upload_tap_hint')}</em></span>
+          </label>
+        )}
+
+        <p className="pf-specimen__caption pf-specimen__caption--centered">
+          <em>{t(captionKey)}</em>
+        </p>
+
+        {/* Replace link — only show when a specimen is on file, so
+            user can swap. Quieter than the primary upload prompt. */}
+        {source && (
+          <label className="pf-cta-link pf-cta-link--small">
+            <input
+              type="file"
+              accept="image/*"
+              name="pf-photo-replace"
+              className="pf-cta-link__file"
+              onChange={onFile}
+            />
+            <span className="pf-cta-link__text">{t(ctaKey)}</span>
+          </label>
+        )}
+      </section>
 
       <div className="pf-section-rule" aria-hidden>
         <span className="pf-fleuron">❦</span>
       </div>
 
-      <div className="pf-pick-head">
-        <h2 className="pf-pick-head__title">{t('pick_heading')}</h2>
-        <span className="pf-pick-head__sub"><em>{t('pick_sub')}</em></span>
-      </div>
-
-      {/* Catalog of known species — not a chooser. The Society
-          determines the assignment from the user's likeness once they
-          tap Reclassify. */}
-      <p className="pf-catalog-note"><em>{t('catalog_note')}</em></p>
-
-      {(['everyday', 'wholesome', 'uncanny'] as const).map((cat) => (
-        <section key={cat} className="pf-pet-section">
-          <header className="pf-pet-section__head">
-            <span className="pf-pet-section__name">{tCategory(cat)}</span>
-            <span className="pf-pet-section__rule" aria-hidden />
-          </header>
-          <ul className="pf-pet-grid pf-pet-grid--catalog">
-            {groups[cat].map((pet) => (
-              <PetTile key={pet.id} pet={pet} />
-            ))}
-          </ul>
-        </section>
-      ))}
-
-      <span className="pf-page-no">— xii —</span>
-    </Ticket>
-  );
-}
-
-// Catalog-only — non-interactive plate showing one of the 12 species
-// the Society can determine you as. Cover image + caption.
-function PetTile({ pet }: { pet: Pet }) {
-  const [imgFailed, setImgFailed] = useState(false);
-  return (
-    <li>
-      <div
-        className="pf-pet-tile pf-pet-tile--catalog"
-        style={{ '--tile-tint': pet.tint } as React.CSSProperties}
-      >
-        <span className="pf-pet-tile__plate">Pl. {pet.plate}</span>
-        <div className="pf-pet-tile__icon" aria-hidden>
-          {imgFailed ? (
-            <PetEngraving id={pet.id} size={62} />
-          ) : (
-            <img className="pf-pet-tile__cover"
-                 src={`/pet-filter/cover_${pet.id}.jpg`}
-                 alt=""
-                 draggable={false}
-                 onError={() => setImgFailed(true)} />
-          )}
+      {/* Tiny "what's possible" ribbon — peek at the 12 orders without
+          asking the user to pick. Read-only catalog footnote. */}
+      <div className="pf-orders-peek">
+        <div className="pf-orders-peek__label">
+          <em>{t('catalog_note')}</em>
         </div>
-        <div className="pf-pet-tile__name">{pet.name}</div>
-        <div className="pf-pet-tile__latin"><em>{pet.latin}</em></div>
+        <ul className="pf-orders-peek__row">
+          {PETS.map((pet) => (
+            <li key={pet.id} title={`${pet.name} · ${pet.latin}`}>
+              <span className="pf-orders-peek__icon" style={{ color: pet.tint }}>
+                <PetEngraving id={pet.id} size={20} />
+              </span>
+            </li>
+          ))}
+        </ul>
       </div>
-    </li>
+    </Ticket>
   );
 }
 
 function UploadGlyph() {
   return (
-    <svg viewBox="0 0 64 64" width={44} height={44} aria-hidden
-         fill="none" stroke="currentColor" strokeWidth={1.4}
+    <svg viewBox="0 0 64 64" width={56} height={56} aria-hidden
+         fill="none" stroke="currentColor" strokeWidth={1.2}
          strokeLinecap="round" strokeLinejoin="round">
       <rect x="10" y="18" width="44" height="32" rx="0" />
-      <circle cx="32" cy="34" r="9" />
-      <circle cx="32" cy="34" r="3" />
+      <circle cx="32" cy="34" r="11" />
+      <circle cx="32" cy="34" r="4" />
       <line x1="46" y1="22" x2="50" y2="22" />
       <path d="M10 22 L16 16 L26 16 L30 22" />
     </svg>
   );
 }
+
+// Pet definitions imported for the orders-peek row.
+export type { Pet };

@@ -3,7 +3,7 @@
 // minimal footer with imprint + back-action. Mirrors the Plate page of
 // a 19th-c. natural history book.
 
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { t } from '../i18n';
 
 interface FooterAction {
@@ -33,10 +33,34 @@ export default function Ticket({
   footerHeroDirection = 'forward', footerHeroDisabled = false,
   footerLeftAction, className = '',
 }: Props) {
+  // Scroll-hint: show 『more below ▼』 when body content overflows AND
+  // the user hasn't scrolled near the bottom. Tracked per render.
+  const bodyRef = useRef<HTMLDivElement>(null);
+  const [hasMore, setHasMore] = useState(false);
+
+  useEffect(() => {
+    const el = bodyRef.current;
+    if (!el) return;
+    const NEAR_BOTTOM = 24;  // px tolerance
+    const update = () => {
+      const overflow = el.scrollHeight - el.clientHeight > 4;
+      const atBottom = el.scrollHeight - (el.scrollTop + el.clientHeight) < NEAR_BOTTOM;
+      setHasMore(overflow && !atBottom);
+    };
+    update();
+    el.addEventListener('scroll', update, { passive: true });
+    // Re-evaluate on content/layout change.
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    Array.from(el.children).forEach((c) => ro.observe(c as Element));
+    return () => {
+      el.removeEventListener('scroll', update);
+      ro.disconnect();
+    };
+  }, [children]);
+
   return (
     <article className={`pf-plate ${className}`}>
-      {/* Decorative double-rule frame, drawn with two box-shadows so the
-          inset matches the body padding exactly. */}
       <div className="pf-plate__rules" aria-hidden />
 
       <header className="pf-plate__head">
@@ -47,7 +71,20 @@ export default function Ticket({
 
       <div className="pf-plate__rule" aria-hidden />
 
-      <div className="pf-plate__body">{children}</div>
+      <div className="pf-plate__body" ref={bodyRef}>{children}</div>
+
+      {/* More-below pill — pulses softly when there's content beneath. */}
+      {hasMore && (
+        <button
+          type="button"
+          className="pf-plate__more"
+          aria-label={t('scroll_more')}
+          onClick={() => bodyRef.current?.scrollBy({ top: 200, behavior: 'smooth' })}
+        >
+          <em>{t('scroll_more')}</em>
+          <span className="pf-plate__more-arrow" aria-hidden>▾</span>
+        </button>
+      )}
 
       <div className="pf-plate__rule" aria-hidden />
 

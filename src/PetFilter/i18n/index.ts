@@ -91,6 +91,7 @@ const STRINGS = {
     err_upload_failed: 'The specimen could not be lodged. Try a smaller likeness.',
     err_gen_failed: 'The engraver was unable to finish. Try another order.',
     hint_tap_play: 'tap to begin',
+    scroll_more: 'more below',
   },
   zh: {
     brand: 'ALTERU',
@@ -167,6 +168,7 @@ const STRINGS = {
     err_upload_failed: '标本未能登录，换张小一点的肖像。',
     err_gen_failed: '雕版师未能完成，换一物种再试。',
     hint_tap_play: '轻触开始',
+    scroll_more: '向下还有',
   },
 } as const;
 

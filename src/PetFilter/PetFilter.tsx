@@ -59,6 +59,32 @@ export default function PetFilter() {
     return () => { cancelled = true; };
   }, []);
 
+  // Demo URL handling — for visual QA / heuristic audit. Lets us
+  // deterministically render any phase via ?demo=...
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const demo = new URLSearchParams(window.location.search).get('demo');
+    if (!demo) return;
+    const fakeShot: PetShot = {
+      id: 'demo-cap',
+      petId: 'capybara',
+      petName: 'Capybara',
+      imageUrl: '/pet-filter/demo_pet_capybara.jpg',
+      selfieUrl: '/pet-filter/demo_pet_cat.jpg',
+      createdAt: Date.now(),
+    };
+    if (demo === 'frontispiece') setPhase('frontispiece');
+    else if (demo === 'picker') setPhase('picker');
+    else if (demo === 'processing') {
+      setPendingPet('octopus');
+      setPhase('processing');
+    } else if (demo === 'result') {
+      setCurrent(fakeShot);
+      setCameFromWall(false);
+      setPhase('result');
+    } else if (demo === 'wall') setPhase('wall');
+  }, []);
+
   // First-touch audio unlock.
   const firstTouchRef = useRef(false);
   useEffect(() => {
@@ -132,9 +158,27 @@ export default function PetFilter() {
       persist({ shots: nextShots, reactions: savedData?.reactions });
       setLocalExtra((prev) => [shot, ...prev].slice(0, 12));
     } catch (e) {
-      setError(t('err_gen_failed'));
+      const isCancel = e instanceof Error && e.name === 'CancelledError';
+      if (!isCancel) setError(t('err_gen_failed'));
       setPhase('picker');
     }
+  };
+
+  const handleCancelGen = () => {
+    playClick();
+    petGen.cancel();
+  };
+
+  // Share — copy a short citation string to clipboard. Platform-side
+  // post-share is a future enhancement; clipboard works everywhere.
+  const [shareLabel, setShareLabel] = useState('');
+  const handleShare = () => {
+    if (!current) return;
+    playClick();
+    const text = `${current.petName} · ${current.imageUrl} · alteru.studio`;
+    try { navigator.clipboard?.writeText(text); } catch { /* no-op */ }
+    setShareLabel(t('share_copied'));
+    setTimeout(() => setShareLabel(''), 1800);
   };
 
   const handleNew = () => {
@@ -200,6 +244,8 @@ export default function PetFilter() {
             stage={petGen.stage}
             petId={pendingPet}
             selfiePreviewUrl={procPreview}
+            startedAt={petGen.startedAt || Date.now()}
+            onCancel={handleCancelGen}
           />
         )}
         {phase === 'result' && current && (
@@ -210,6 +256,8 @@ export default function PetFilter() {
             onToggleReaction={cameFromWall ? (k) => toggleReaction(current.id, k) : undefined}
             onNew={handleNew}
             onWall={handleWall}
+            onShare={handleShare}
+            shareLabel={shareLabel || undefined}
           />
         )}
         {phase === 'wall' && (

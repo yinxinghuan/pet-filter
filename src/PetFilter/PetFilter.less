@@ -597,14 +597,27 @@
 
 // ─── Errors ───────────────────────────────────────────────────────────
 .pf-error {
-  margin: 10px 0;
-  padding: 8px 12px;
-  border: 0.6px solid @seal;
-  background: rgba(138, 46, 34, 0.06);
+  margin: 12px 0;
+  padding: 10px 14px;
+  border: 0.8px solid @seal;
+  background: rgba(138, 46, 34, 0.08);
   color: @seal;
   font-family: @font-display;
   font-style: italic;
-  font-size: 13px;
+  font-size: 14px;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  &--persistent {
+    border-style: solid;
+    box-shadow: 0 1px 0 rgba(138, 46, 34, 0.10);
+  }
+}
+.pf-error__icon {
+  font-family: @font-display;
+  font-size: 16px;
+  color: @seal;
+  flex: 0 0 auto;
 }
 
 // ─── Processing ───────────────────────────────────────────────────────
@@ -660,6 +673,15 @@
   &--bl { bottom: 6px; left: 6px; border-bottom-width: 1px; border-left-width: 1px; }
   &--br { bottom: 6px; right: 6px; border-bottom-width: 1px; border-right-width: 1px; }
 }
+.pf-proc__photo-fallback {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: @ink-faint;
+  background: @paper-deep;
+}
 .pf-proc__step {
   font-family: @font-display;
   font-size: 19px;
@@ -675,10 +697,78 @@
   text-align: left;
   color: @ink-fade;
 }
+
+// Faux-progress fill — sepia ink seeping into a hairline rule.
+.pf-proc__progress {
+  width: 220px;
+  height: 6px;
+  background: lighten(@paper, 4%);
+  border: 0.6px solid @ink;
+  position: relative;
+  margin-top: 2px;
+}
+.pf-proc__progress-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: @ink-soft;
+  width: 0;
+  transition: width 900ms cubic-bezier(0.45, 0.05, 0.5, 0.95);
+  // Subtle ink-bleed at the leading edge.
+  &::after {
+    content: '';
+    position: absolute;
+    right: -1.5px;
+    top: -1px; bottom: -1px;
+    width: 4px;
+    background: linear-gradient(to right,
+      rgba(46, 31, 18, 0.6),
+      rgba(46, 31, 18, 0.0));
+    border-radius: 2px;
+  }
+}
+.pf-proc__elapsed {
+  display: flex;
+  justify-content: space-between;
+  width: 220px;
+  font-family: @font-mono;
+  font-size: 10px;
+  color: @ink-fade;
+  letter-spacing: 0.04em;
+  em {
+    font-family: @font-display;
+    font-size: 11px;
+    color: @ink-faint;
+    font-style: italic;
+    margin-right: 4px;
+  }
+}
+.pf-proc__sep {
+  font-family: @font-display;
+  font-style: italic;
+  color: @ink-faint;
+  margin-left: 1px;
+}
 .pf-proc__fineprint {
   font-family: @font-body;
   font-size: 11.5px;
   color: @ink-faint;
+}
+.pf-proc__cancel {
+  background: none;
+  border: 0;
+  font-family: @font-display;
+  font-style: italic;
+  font-size: 13px;
+  color: @ink-fade;
+  cursor: pointer;
+  margin-top: 6px;
+  padding: 6px 12px;
+  text-decoration: underline;
+  text-decoration-thickness: 0.5px;
+  text-underline-offset: 4px;
+  text-decoration-color: @ink-faint;
+  -webkit-tap-highlight-color: transparent;
+  &:active { color: @seal; }
 }
 
 // ─── Result ───────────────────────────────────────────────────────────
@@ -689,12 +779,6 @@
   padding: 0 0 12px;
   align-items: center;
   text-align: center;
-}
-.pf-result__subhead {
-  margin: 0;
-  font-family: @font-body;
-  font-size: 13px;
-  color: @ink-soft;
 }
 .pf-result__title {
   font-family: @font-display;
@@ -749,6 +833,39 @@
   font-size: 12px;
   color: @ink-faint;
   font-style: italic;
+}
+
+// Share — primary on freshly generated plates. Looks like the
+// underlined CTAs elsewhere in the volume; not a chunky button.
+.pf-result__share {
+  margin-top: 14px;
+  background: none;
+  border: 1px solid @ink;
+  font-family: @font-display;
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: @ink;
+  font-variant: small-caps;
+  padding: 8px 18px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  background: lighten(@paper, 4%);
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 140ms ease;
+  &:active { transform: scale(0.97); }
+  &:disabled {
+    color: @ink-fade;
+    font-style: italic;
+    cursor: default;
+  }
+}
+.pf-result__share-icon {
+  font-family: @font-display;
+  font-size: 18px;
+  color: @seal;
 }
 
 // ─── Reactions ────────────────────────────────────────────────────────
@@ -1012,6 +1129,15 @@
   color: @ink-fade;
 }
 
+// When viewing the frontispiece, the footer 『archive』 link is a
+// secondary path — soften it so the central CTA dominates.
+.pf-front + * .pf-plate__foot-action,
+.pf-plate:has(.pf-front) .pf-plate__foot-action {
+  font-size: 12px;
+  color: @ink-faint;
+  font-style: italic;
+}
+
 // ─── Frontispiece — minimalist Victorian title page ──────────────────
 // Letterpress restraint: title + photo + seal + CTA. No laurels, no
 // banners, no mandala. Typography carries the page.
@@ -1020,8 +1146,8 @@
   flex-direction: column;
   align-items: center;
   text-align: center;
-  padding: 8px 0 22px;
-  gap: 22px;
+  padding: 4px 0 8px;
+  gap: 14px;
 }
 
 // Staggered entrance — three blocks only.
@@ -1086,11 +1212,11 @@
 }
 .pf-front__book-title {
   font-family: @font-display;
-  font-size: 60px;
+  font-size: 52px;
   font-weight: 500;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
-  margin: 22px 0 8px;
+  margin: 16px 0 6px;
   color: @ink;
   line-height: 0.96;
   font-variant: small-caps;
@@ -1146,8 +1272,8 @@
 }
 .pf-front__portrait-circle {
   position: relative;
-  width: 264px;
-  height: 264px;
+  width: 238px;
+  height: 238px;
   background: lighten(@paper, 4%);
   border-radius: 50%;
   border: 1.5px solid @ink;
@@ -1223,6 +1349,63 @@
 @keyframes pf-front-hint-pulse {
   0%, 100% { opacity: 0.65; }
   50%      { opacity: 1; }
+}
+
+// Diagonal "SPECIMEN — example" watermark across the demo plate.
+// Makes clear the rotating image is illustrative, not user data.
+.pf-front__portrait-watermark {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 2;
+  span {
+    font-family: @font-display;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: @seal;
+    padding: 4px 14px;
+    border: 1px solid @seal;
+    background: rgba(244, 235, 215, 0.86);
+    transform: rotate(-12deg);
+    font-variant: small-caps;
+    box-shadow: 0 1px 0 rgba(138, 46, 34, 0.10);
+  }
+}
+
+// Stronger "open the volume" CTA under the plate caption — replaces
+// the small italic hint that was easy to miss.
+.pf-front__begin-cta {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-top: 14px;
+  padding: 8px 16px;
+  border: 1px solid @ink;
+  background: lighten(@paper, 4%);
+  font-family: @font-display;
+  font-variant: small-caps;
+  letter-spacing: 0.10em;
+  color: @ink;
+  cursor: pointer;
+  animation: pf-front-begin-pulse 2200ms ease-in-out infinite;
+}
+@keyframes pf-front-begin-pulse {
+  0%, 100% { box-shadow: 0 0 0 rgba(46, 31, 18, 0.0); }
+  50%      { box-shadow: 0 0 0 4px rgba(46, 31, 18, 0.08); }
+}
+.pf-front__begin-arrow {
+  font-size: 18px;
+  color: @seal;
+  transform: translateY(-1px);
+}
+.pf-front__begin-label {
+  font-size: 15px;
+  font-weight: 500;
 }
 .pf-front__portrait--placeholder .pf-front__portrait-circle {
   background:

@@ -75,6 +75,15 @@ export default function PickerScreen({
       </h1>
       <p className="pf-deck"><em>{t('hero_sub')}</em></p>
 
+      {/* Persistent error bar — re-entry from a failed gen leaves the
+          error visible here until the user starts a new attempt. */}
+      {errorLabel ? (
+        <div className="pf-error pf-error--persistent" role="alert">
+          <span className="pf-error__icon" aria-hidden>✶</span>
+          <span><em>{errorLabel}</em></span>
+        </div>
+      ) : null}
+
       <div className="pf-section-rule" aria-hidden>
         <span className="pf-fleuron">❦</span>
       </div>
@@ -106,7 +115,6 @@ export default function PickerScreen({
         </div>
       </section>
 
-      {errorLabel ? <div className="pf-error">{errorLabel}</div> : null}
 
       <div className="pf-section-rule" aria-hidden>
         <span className="pf-fleuron">❦</span>

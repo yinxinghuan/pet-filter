@@ -11,12 +11,15 @@ interface Props {
   onToggleReaction?: (kind: ReactionKind) => void;
   onNew: () => void;
   onWall: () => void;
+  onShare?: () => void;
+  /** Transient label shown next to the share button after a copy. */
+  shareLabel?: string;
 }
 
 const REACTION_ORDER: ReactionKind[] = ['heart', 'fire', 'mind', 'eye'];
 
 export default function ResultScreen({
-  shot, cameFromWall, myReactions, onToggleReaction, onNew, onWall,
+  shot, cameFromWall, myReactions, onToggleReaction, onNew, onWall, onShare, shareLabel,
 }: Props) {
   const pet = petById(shot.petId);
 
@@ -30,7 +33,8 @@ export default function ResultScreen({
       footerLeftAction={cameFromWall ? undefined : { label: t('cta_wall'), onClick: onWall }}
     >
       <div className="pf-result">
-        <p className="pf-result__subhead"><em>{t('result_subhead')}</em></p>
+        {/* Title block (single voice — was duplicated as
+            "Society determined" + "TITLE"; now just the species). */}
         <h1 className="pf-result__title">{shot.petName}</h1>
         <p className="pf-result__latin"><em>{pet?.latin ?? ''}</em></p>
 
@@ -59,6 +63,19 @@ export default function ResultScreen({
               );
             })}
           </div>
+        )}
+
+        {/* Share — primary on freshly minted plates, secondary on
+            wall views. Surface clipboard copy for now; platform post
+            share is a TODO. */}
+        {!cameFromWall && onShare && (
+          <button type="button"
+                  className="pf-result__share"
+                  onPointerDown={onShare}
+                  disabled={!!shareLabel}>
+            <span className="pf-result__share-icon" aria-hidden>✎</span>
+            {shareLabel || t('cta_share')}
+          </button>
         )}
       </div>
     </Ticket>

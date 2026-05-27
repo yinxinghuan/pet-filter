@@ -84,10 +84,8 @@ export default function FrontispiecePage({
 
         {/* ─── Wax seal (single color accent) ─── */}
         <div className="pf-front__seal-wrap" aria-hidden>
-          <WaxSeal size={56} />
+          <WaxSeal size={48} />
         </div>
-
-        <span className="pf-page-no">— frontispiece —</span>
       </div>
     </Ticket>
   );
@@ -118,13 +116,21 @@ function FrontDemo({ onOpen }: { onOpen: () => void }) {
              onError={(e) => {
                (e.currentTarget as HTMLImageElement).style.opacity = '0';
              }} />
+        {/* Diagonal "SPECIMEN — example" watermark stamp across the
+            plate. Tells the user the rotating images aren't theirs. */}
+        <div className="pf-front__portrait-watermark" aria-hidden>
+          <span>{t('front_example_stamp')}</span>
+        </div>
       </div>
       <div className="pf-front__portrait-cap">
         <div className="pf-front__portrait-name">{pet?.name}</div>
         <div className="pf-front__portrait-latin"><em>{pet?.latin}</em></div>
-        <div className="pf-front__portrait-by pf-front__portrait-hint">
-          <em>— {t('front_cta_open')} —</em>
-        </div>
+      </div>
+      {/* Visible button affordance — replaces the small pulsing italic
+          hint. A stronger underlined CTA below the plate. */}
+      <div className="pf-front__begin-cta">
+        <span className="pf-front__begin-arrow" aria-hidden>☞</span>
+        <span className="pf-front__begin-label">{t('front_cta_open')}</span>
       </div>
     </button>
   );

@@ -14,11 +14,20 @@ interface GenInput {
   petId: string;
 }
 
+export class CancelledError extends Error {
+  constructor() { super('cancelled'); this.name = 'CancelledError'; }
+}
+
 export interface UsePetGen {
   generate: (input: GenInput) => Promise<PetShot>;
+  cancel: () => void;
   loading: boolean;
   stage: Stage;
   error: Error | null;
+  /** Monotonic timestamp when the current `generate` started, or 0
+   *  when idle. Lets the UI compute elapsed seconds outside React
+   *  state to avoid re-render thrashing. */
+  startedAt: number;
 }
 
 export function usePetGen(): UsePetGen {
@@ -28,7 +37,17 @@ export function usePetGen(): UsePetGen {
   const [loading, setLoading] = useState(false);
   const [stage, setStage] = useState<Stage>('');
   const [error, setError] = useState<Error | null>(null);
+  const [startedAt, setStartedAt] = useState(0);
   const inFlight = useRef(false);
+  const cancelRef = useRef(false);
+
+  const cancel = useCallback(() => {
+    cancelRef.current = true;
+  }, []);
+
+  function checkCancel() {
+    if (cancelRef.current) throw new CancelledError();
+  }
 
   const generate = useCallback(
     async ({ source, petId }: GenInput): Promise<PetShot> => {
@@ -36,34 +55,39 @@ export function usePetGen(): UsePetGen {
       if (!pet) throw new Error(`unknown pet id: ${petId}`);
       if (inFlight.current) throw new Error('pet-gen: already in flight');
       inFlight.current = true;
+      cancelRef.current = false;
       setLoading(true);
       setError(null);
+      setStartedAt(Date.now());
 
       try {
         let selfieUrl: string;
         if (source.kind === 'url') {
-          // Already hosted (Aigram avatar) — skip upload entirely.
           setStage('uploading');
           await new Promise((r) => setTimeout(r, 240));
+          checkCancel();
           selfieUrl = source.url;
         } else {
           setStage('uploading');
           const prepared = await prepareSelfie(source.file);
+          checkCancel();
           const uploaded = await upload(prepared, 'selfie.jpg');
+          checkCancel();
           selfieUrl = uploaded.url;
         }
 
         setStage('morphing');
-        // tiny beat so the user reads the morphing label
         await new Promise((r) => setTimeout(r, 350));
+        checkCancel();
         setStage('rendering');
         const imageUrl = await genImg({ prompt: pet.prompt, ref_url: selfieUrl });
+        checkCancel();
 
-        // Preload the result image so the swap to the result page
-        // doesn't flash an empty box.
         await preloadImage(imageUrl);
+        checkCancel();
         setStage('settling');
         await new Promise((r) => setTimeout(r, 320));
+        checkCancel();
 
         const shot: PetShot = {
           id: newShotId(),
@@ -80,14 +104,16 @@ export function usePetGen(): UsePetGen {
         throw err;
       } finally {
         inFlight.current = false;
+        cancelRef.current = false;
         setLoading(false);
         setStage('');
+        setStartedAt(0);
       }
     },
     [genImg, upload],
   );
 
-  return { generate, loading, stage, error };
+  return { generate, cancel, loading, stage, error, startedAt };
 }
 
 function newShotId(): string {

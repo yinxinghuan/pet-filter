@@ -11,6 +11,11 @@
 @ink-fade: #7C6948;
 @ink-faint: #A48E64;
 @seal: #8A2E22;   // muted crimson stamp ink, used VERY sparingly
+// Brass instrument palette — used on the Processing screen.
+@brass:           #8C6A2E;   // primary tone
+@brass-deep:      #5A3F18;
+@brass-highlight: #D4A75A;
+@brass-glow:      #E8C77A;   // for valve "lit" state
 
 @font-display: 'Cormorant Garamond', 'Cormorant', Georgia, 'Times New Roman', serif;
 @font-body: 'Source Serif 4', 'Source Serif Pro', Georgia, serif;
@@ -711,15 +716,60 @@
   flex: 0 0 auto;
 }
 
-// ─── Processing ───────────────────────────────────────────────────────
+// ─── Processing — Victorian brass instruments ────────────────────────
 .pf-proc {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 18px;
-  padding: 16px 0 12px;
+  gap: 14px;
+  padding: 8px 0 8px;
   --tint: @ink;
 }
+
+// Caliper frame around the specimen photo. Tick rulers on all four
+// edges; brass screws at corners.
+.pf-caliper {
+  position: relative;
+  width: 232px;
+  padding: 14px;
+}
+.pf-caliper__rule {
+  position: absolute;
+  color: @ink;
+  pointer-events: none;
+  &--top    { top: 4px;    left: 14px;  right: 14px; height: 8px; width: auto; }
+  &--bottom { bottom: 4px; left: 14px;  right: 14px; height: 8px; width: auto; }
+  &--left   { top: 14px;   left: 4px;   bottom: 14px; width: 8px; height: auto; }
+  &--right  { top: 14px;   right: 4px;  bottom: 14px; width: 8px; height: auto; }
+}
+.pf-caliper__screw {
+  position: absolute;
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, @brass-highlight, @brass 70%);
+  border: 0.6px solid @brass-deep;
+  box-shadow: inset 0 -1px 0 rgba(0,0,0,0.25);
+  &--tl { top: 0; left: 0; }
+  &--tr { top: 0; right: 0; }
+  &--bl { bottom: 0; left: 0; }
+  &--br { bottom: 0; right: 0; }
+  // Slot detail.
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 3px;
+    border-top: 1px solid @brass-deep;
+    transform: rotate(35deg);
+  }
+}
+.pf-caliper__inner {
+  position: relative;
+  aspect-ratio: 1;
+  background: @paper-deep;
+  border: 1px solid @ink;
+  overflow: hidden;
+}
+
 .pf-proc__photo {
   position: relative;
   width: 248px;
@@ -773,6 +823,16 @@
   color: @ink-faint;
   background: @paper-deep;
 }
+// When the photo is inside the caliper frame, it needs to fill the
+// inner box rather than the old .pf-proc__photo sizing.
+.pf-caliper__inner .pf-proc__photo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  filter: sepia(0.40) contrast(1.06) saturate(0.7);
+  mix-blend-mode: multiply;
+}
 .pf-proc__step {
   font-family: @font-display;
   font-size: 19px;
@@ -789,49 +849,73 @@
   color: @ink-fade;
 }
 
-// Faux-progress fill — sepia ink seeping into a hairline rule.
-.pf-proc__progress {
-  width: 220px;
-  height: 6px;
-  background: lighten(@paper, 4%);
-  border: 0.6px solid @ink;
-  position: relative;
-  margin-top: 2px;
+// Stage indicator row — 4 filament valves below the caliper.
+.pf-stages {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
 }
-.pf-proc__progress-fill {
-  position: absolute;
-  inset: 0 auto 0 0;
-  background: @ink-soft;
-  width: 0;
-  transition: width 900ms cubic-bezier(0.45, 0.05, 0.5, 0.95);
-  // Subtle ink-bleed at the leading edge.
-  &::after {
-    content: '';
-    position: absolute;
-    right: -1.5px;
-    top: -1px; bottom: -1px;
-    width: 4px;
-    background: linear-gradient(to right,
-      rgba(46, 31, 18, 0.6),
-      rgba(46, 31, 18, 0.0));
-    border-radius: 2px;
+.pf-stages__valve {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  opacity: 0.55;
+  &--done { opacity: 0.85; }
+  &--live {
+    opacity: 1;
+    svg { filter: drop-shadow(0 0 4px rgba(232, 199, 122, 0.65)); }
   }
 }
-.pf-proc__elapsed {
+.pf-stages__label {
+  font-family: @font-display;
+  font-size: 9px;
+  letter-spacing: 0.10em;
+  color: @brass-deep;
+  font-variant: small-caps;
+  font-weight: 600;
+}
+.pf-stages__valve--pending .pf-stages__label { color: @ink-faint; }
+
+// Pressure gauge slot — keeps the gauge a manageable width.
+.pf-proc__gauge {
+  width: 260px;
+}
+
+// Chronometer line — brass cell + central pivot.
+.pf-proc__chrono {
   display: flex;
-  justify-content: space-between;
-  width: 220px;
-  font-family: @font-mono;
-  font-size: 10px;
-  color: @ink-fade;
-  letter-spacing: 0.04em;
+  align-items: center;
+  gap: 10px;
+  font-family: @font-display;
+  color: @ink;
+}
+.pf-proc__chrono-cell {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
   em {
     font-family: @font-display;
-    font-size: 11px;
-    color: @ink-faint;
     font-style: italic;
-    margin-right: 4px;
+    font-size: 10px;
+    color: @brass-deep;
+    letter-spacing: 0.08em;
+    font-variant: small-caps;
   }
+  strong {
+    font-family: @font-mono;
+    font-size: 18px;
+    color: @ink;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+  }
+}
+.pf-proc__chrono-bar {
+  width: 24px;
+  height: 0;
+  border-top: 1px solid @brass;
+  margin-top: 18px;
 }
 .pf-proc__sep {
   font-family: @font-display;

@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Pet Filter — All Five Plates · Live</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Source+Serif+4:ital,wght@0,400;0,500;1,400&family=JetBrains+Mono:wght@400;500&display=swap" />
+<style>
+  :root {
+    --paper: #EBDFC2;
+    --paper-deep: #D8C49A;
+    --ink: #261A0F;
+    --ink-soft: #4A3621;
+    --ink-fade: #7C6948;
+    --ink-faint: #A48E64;
+    --seal: #8A2E22;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--paper); }
+  body {
+    color: var(--ink);
+    font-family: 'Source Serif 4', Georgia, serif;
+    font-size: 15px;
+    line-height: 1.55;
+    padding: 32px 20px 60px;
+    min-height: 100vh;
+  }
+  .wrap { max-width: 1700px; margin: 0 auto; }
+  h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 500;
+    font-size: 48px;
+    letter-spacing: 0.03em;
+    font-variant: small-caps;
+    margin: 0 0 4px;
+  }
+  .deck {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 18px;
+    color: var(--ink-soft);
+    margin: 0 0 24px;
+  }
+  .meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    color: var(--ink-fade);
+    text-transform: uppercase;
+    border-top: 1px solid var(--ink-faint);
+    border-bottom: 1px solid var(--ink-faint);
+    padding: 7px 0;
+    margin: 0 0 28px;
+    display: flex;
+    justify-content: space-between;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+  .seal {
+    display: inline-block;
+    background: var(--seal);
+    color: #F4EBD7;
+    padding: 3px 10px;
+    border-radius: 999px;
+    letter-spacing: 0.08em;
+  }
+
+  /* Five live frames side-by-side. Each is the real app at a
+     ?demo=... URL — fully interactive. */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 18px;
+    margin: 0 0 32px;
+  }
+  @media (max-width: 1640px) { .grid { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 1080px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width:  640px) { .grid { grid-template-columns: 1fr; } }
+
+  .phase {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .phase__hd {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--ink);
+  }
+  .phase__n {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 600;
+    font-size: 30px;
+    color: var(--seal);
+    line-height: 1;
+    font-variant: small-caps;
+  }
+  .phase__nm {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 500;
+    font-size: 22px;
+    font-variant: small-caps;
+    letter-spacing: 0.02em;
+  }
+  .phase__sb {
+    margin-left: auto;
+    font-family: 'Source Serif 4', serif;
+    font-style: italic;
+    font-size: 12px;
+    color: var(--ink-fade);
+  }
+
+  /* Phone-frame around the live iframe. */
+  .phone {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 9 / 19.5;
+    background: #000;
+    border-radius: 28px;
+    padding: 8px;
+    box-shadow:
+      0 4px 0 rgba(46, 31, 18, 0.10),
+      0 14px 28px rgba(46, 31, 18, 0.22);
+  }
+  .phone iframe {
+    width: 100%;
+    height: 100%;
+    border: 0;
+    border-radius: 22px;
+    background: var(--paper);
+    display: block;
+  }
+  /* Tap-here pill — explains the iframe is interactive. */
+  .phone__hint {
+    position: absolute;
+    bottom: -16px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--paper);
+    border: 1px solid var(--ink-fade);
+    font-family: 'Source Serif 4', serif;
+    font-style: italic;
+    font-size: 11px;
+    color: var(--ink-fade);
+    padding: 2px 8px;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+
+  .open {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 32px;
+  }
+  @media (max-width: 720px) { .open { grid-template-columns: 1fr; } }
+  .open-card {
+    border: 1px dashed var(--ink-fade);
+    padding: 14px 16px;
+  }
+  .open-card h3 {
+    margin: 0 0 6px;
+    font-family: 'Cormorant Garamond', serif;
+    font-variant: small-caps;
+    font-size: 17px;
+    letter-spacing: 0.04em;
+  }
+  .open-card ul { margin: 0; padding-left: 18px; font-size: 13px; color: var(--ink-soft); }
+  .open-card li { margin: 3px 0; }
+
+  .fin {
+    margin-top: 36px;
+    font-family: 'Source Serif 4', serif;
+    font-style: italic;
+    color: var(--ink-fade);
+    font-size: 12.5px;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>The Five Plates · live</h1>
+<p class="deck"><em>Every plate is the real game — tap into any frame and use it as you would on phone.</em></p>
+<div class="meta">
+  <span>VIEW · 5 PHASES SIDE-BY-SIDE</span>
+  <span>SOURCE · LIVE GAME · ?demo=&lt;phase&gt;</span>
+  <span><span class="seal">9 of 10 audit findings resolved</span></span>
+</div>
+
+<div class="grid">
+  <article class="phase">
+    <header class="phase__hd">
+      <span class="phase__n">I</span>
+      <span class="phase__nm">Frontispiece</span>
+      <span class="phase__sb">cover</span>
+    </header>
+    <div class="phone">
+      <iframe src="./?demo=frontispiece" title="Frontispiece" loading="lazy"></iframe>
+      <span class="phone__hint">tap anywhere · live</span>
+    </div>
+  </article>
+
+  <article class="phase">
+    <header class="phase__hd">
+      <span class="phase__n">II</span>
+      <span class="phase__nm">Picker</span>
+      <span class="phase__sb">specimen + species</span>
+    </header>
+    <div class="phone">
+      <iframe src="./?demo=picker" title="Picker" loading="lazy"></iframe>
+      <span class="phone__hint">scroll · tap pets · live</span>
+    </div>
+  </article>
+
+  <article class="phase">
+    <header class="phase__hd">
+      <span class="phase__n">III</span>
+      <span class="phase__nm">Processing</span>
+      <span class="phase__sb">~60s wait</span>
+    </header>
+    <div class="phone">
+      <iframe src="./?demo=processing" title="Processing" loading="lazy"></iframe>
+      <span class="phone__hint">watch the elapsed counter · live</span>
+    </div>
+  </article>
+
+  <article class="phase">
+    <header class="phase__hd">
+      <span class="phase__n">IV</span>
+      <span class="phase__nm">Result</span>
+      <span class="phase__sb">reveal + share</span>
+    </header>
+    <div class="phone">
+      <iframe src="./?demo=result" title="Result" loading="lazy"></iframe>
+      <span class="phone__hint">tap 题字并分享 · live</span>
+    </div>
+  </article>
+
+  <article class="phase">
+    <header class="phase__hd">
+      <span class="phase__n">V</span>
+      <span class="phase__nm">Wall</span>
+      <span class="phase__sb">community archive</span>
+    </header>
+    <div class="phone">
+      <iframe src="./?demo=wall" title="Wall" loading="lazy"></iframe>
+      <span class="phone__hint">tap the ghost plate · live</span>
+    </div>
+  </article>
+</div>
+
+<div class="open">
+  <div class="open-card">
+    <h3>Category tooltips</h3>
+    <ul>
+      <li>Section labels 『家常之属』 / 『温良之属』 / 『诡异之属』 don't explain themselves</li>
+      <li>Optional: small ⓘ icon → one-liner tooltip</li>
+    </ul>
+  </div>
+  <div class="open-card">
+    <h3>Batch 6 — atmospheric polish</h3>
+    <ul>
+      <li>Page-turn / parchment-crinkle sounds on phase change</li>
+      <li>Long-press image to save (mobile native)</li>
+      <li>First-open tutorial hint</li>
+    </ul>
+  </div>
+</div>
+
+<p class="fin">— fin —</p>
+
+</div>
+</body>
+</html>

@@ -582,14 +582,21 @@
   &:active &__text { color: @seal; }
 }
 
-// Orders-peek ribbon — small read-only row of all 12 species at the
-// bottom of the picker. Tells the user 『here's what could happen』
-// without making them choose.
+// Orders-peek ribbon — tappable button that opens the Bestiary.
 .pf-orders-peek {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 8px;
+  width: 100%;
+  background: none;
+  border: 0;
+  padding: 4px 8px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  &:active {
+    .pf-orders-peek__link { color: darken(@seal, 8%); }
+  }
 }
 .pf-orders-peek__label {
   font-family: @font-display;
@@ -619,6 +626,108 @@
   align-items: center;
   justify-content: center;
   opacity: 0.78;
+}
+.pf-orders-peek__link {
+  font-family: @font-display;
+  font-style: italic;
+  font-size: 13px;
+  color: @seal;
+  margin-top: 2px;
+}
+
+// ─── Bestiary page ─────────────────────────────────────────────────
+.pf-hero--bestiary {
+  font-size: 36px;
+}
+.pf-bestiary__section + .pf-bestiary__section { margin-top: 22px; }
+.pf-bestiary__section-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 12px;
+}
+.pf-bestiary__section-name {
+  font-family: @font-display;
+  font-style: italic;
+  font-size: 14px;
+  color: @ink-soft;
+  letter-spacing: 0.03em;
+  flex: 0 0 auto;
+  font-variant: small-caps;
+}
+.pf-bestiary__section-rule {
+  flex: 1 1 auto;
+  border-top: 0.6px solid @ink-fade;
+}
+.pf-bestiary__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.pf-bestiary__card {
+  --tint: @ink;
+  display: grid;
+  grid-template-columns: 92px 1fr;
+  gap: 16px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.18);
+  border: 0.6px solid @ink-fade;
+  align-items: center;
+}
+.pf-bestiary__plate {
+  width: 92px;
+  height: 92px;
+  background: @paper-deep;
+  border: 1px solid var(--tint);
+  overflow: hidden;
+  position: relative;
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 3px;
+    border: 0.4px solid @ink-fade;
+    pointer-events: none;
+  }
+}
+.pf-bestiary__img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.pf-bestiary__body {
+  min-width: 0;
+}
+.pf-bestiary__plate-no {
+  font-family: @font-display;
+  font-size: 10px;
+  letter-spacing: 0.10em;
+  color: @ink-fade;
+  font-variant: small-caps;
+}
+.pf-bestiary__name {
+  font-family: @font-display;
+  font-size: 19px;
+  font-style: italic;
+  font-weight: 500;
+  color: @ink;
+  margin-top: 1px;
+}
+.pf-bestiary__latin {
+  font-family: @font-body;
+  font-size: 12px;
+  font-style: italic;
+  color: @ink-soft;
+}
+.pf-bestiary__character {
+  margin: 6px 0 0;
+  font-family: @font-body;
+  font-size: 12.5px;
+  font-style: italic;
+  color: @ink-fade;
+  line-height: 1.45;
 }
 
 // ─── Picker headings ──────────────────────────────────────────────────

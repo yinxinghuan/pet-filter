@@ -1,6 +1,6 @@
 import type { Pet } from './utils/pets';
 
-export type Phase = 'frontispiece' | 'picker' | 'processing' | 'result' | 'wall';
+export type Phase = 'frontispiece' | 'picker' | 'processing' | 'result' | 'wall' | 'bestiary';
 
 export interface PetShot {
   /** Local id (cuid-ish), unique per save. */

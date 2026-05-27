@@ -6,6 +6,7 @@ import PickerScreen from './components/PickerScreen';
 import ProcessingScreen from './components/ProcessingScreen';
 import ResultScreen from './components/ResultScreen';
 import Wall, { type ScopeMode } from './components/Wall';
+import BestiaryPage from './components/BestiaryPage';
 import { usePetGen } from './hooks/usePetGen';
 import { useWall } from './hooks/useWall';
 import { t } from './i18n';
@@ -77,6 +78,7 @@ export default function PetFilter() {
     };
     if (demo === 'frontispiece') setPhase('frontispiece');
     else if (demo === 'picker') setPhase('picker');
+    else if (demo === 'bestiary') setPhase('bestiary');
     else if (demo === 'processing') {
       setPendingPet('octopus');
       setPhase('processing');
@@ -302,7 +304,17 @@ export default function PetFilter() {
             hasAvatarOnFile={!!avatarUrl}
             onSubmit={() => { void handleSubmit(); }}
             onWall={handleWall}
+            onBestiary={() => { playClick(); setPhase('bestiary'); }}
             errorLabel={error || undefined}
+          />
+        )}
+        {phase === 'bestiary' && (
+          <BestiaryPage
+            onBack={() => { playClick(); setPhase('picker'); }}
+            onSubmit={() => {
+              if (source) { void handleSubmit(); }
+              else { playClick(); setPhase('picker'); }
+            }}
           />
         )}
         {phase === 'processing' && pendingPet && (

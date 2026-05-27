@@ -11,11 +11,12 @@ interface Props {
   hasAvatarOnFile: boolean;
   onSubmit: () => void;
   onWall: () => void;
+  onBestiary: () => void;
   errorLabel?: string;
 }
 
 export default function PickerScreen({
-  source, onSourceChange, hasAvatarOnFile, onSubmit, onWall, errorLabel,
+  source, onSourceChange, hasAvatarOnFile, onSubmit, onWall, onBestiary, errorLabel,
 }: Props) {
   const onFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     playClick();
@@ -118,13 +119,14 @@ export default function PickerScreen({
         <span className="pf-fleuron">❦</span>
       </div>
 
-      {/* Tiny "what's possible" ribbon — peek at the 12 orders without
-          asking the user to pick. Read-only catalog footnote. */}
-      <div className="pf-orders-peek">
+      {/* Tap-target "peek the orders" — opens the Bestiary for a full
+          catalog read. Read-only here. */}
+      <button type="button" className="pf-orders-peek"
+              onPointerDown={() => { playClick(); onBestiary(); }}>
         <div className="pf-orders-peek__label">
           <em>{t('catalog_note')}</em>
         </div>
-        <ul className="pf-orders-peek__row">
+        <ul className="pf-orders-peek__row" aria-hidden>
           {PETS.map((pet) => (
             <li key={pet.id} title={`${pet.name} · ${pet.latin}`}>
               <span className="pf-orders-peek__icon" style={{ color: pet.tint }}>
@@ -133,7 +135,8 @@ export default function PickerScreen({
             </li>
           ))}
         </ul>
-      </div>
+        <div className="pf-orders-peek__link"><em>{t('bestiary_link')}</em></div>
+      </button>
     </Ticket>
   );
 }

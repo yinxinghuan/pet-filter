@@ -116,15 +116,16 @@ PLATE_STYLE = (
 
 def hybrid(features):
     return (
-        "A 19th-century zoological plate of an anthropomorphic HYBRID human. "
-        "The subject is the man in the reference photo — KEEP HIS face "
-        "structure, skin tone, eyebrows, hairline, jawline, eye placement, "
-        "and human shoulders fully visible and RECOGNIZABLE. He is NOT a "
-        "pure animal; he is a man with hybrid features grafted onto his "
-        "existing human face. "
-        f"Add to his head ONLY: {features} "
-        "His face must remain ~70% human and ~30% creature. The viewer "
-        "must instantly recognize the same man, transformed."
+        "A 19th-century zoological plate of a STRIKING HYBRID creature. "
+        "Begin with the man in the reference photo — his facial bone "
+        "structure, eye position, jawline, and human shoulders MUST "
+        "still be recognizable underneath. But push the species features "
+        "PROMINENTLY: they should occupy roughly half the head — bold, "
+        "visible, illustrative. This is a STRONG hybrid, not a subtle one. "
+        f"Transform his head this way: {features} "
+        "Balance: ~50% human bone structure visible / ~50% creature features "
+        "covering the surface. Same person, dramatically transformed. "
+        "DO NOT include any plaque, ID number, or written text in the image."
         + PLATE_STYLE
     )
 
@@ -132,24 +133,33 @@ def hybrid(features):
 JOBS = [
     {
         "out": "public/demo_pet_cat.jpg",
-        "feats": "small triangular tabby cat ears emerging from his hair, "
-                 "soft tabby-fur sideburns blending into his cheek stubble, "
-                 "delicate whiskers near the corners of his human mouth, "
-                 "his eyes now feline-almond yellow-green but still HIS eyes.",
+        "feats": "the face is now SUBSTANTIALLY feline — soft tabby fur "
+                 "covers the cheeks, forehead, and jaw, LARGE triangular "
+                 "tabby cat ears rising prominently from his hair, full "
+                 "feline almond-shaped yellow-green eyes with vertical "
+                 "slit pupils replacing his round human eyes, a distinct "
+                 "pink cat nose where his nose was, prominent white "
+                 "whiskers fanning out from the muzzle. The man's bone "
+                 "structure (jaw, shoulders) is still recognizable underneath.",
     },
     {
         "out": "public/demo_pet_capybara.jpg",
-        "feats": "soft coarse brown capybara fur growing on his cheeks and "
-                 "jawline like a beard, small rounded capybara ears in his "
-                 "hair, a slightly blunted nose, sleepy half-closed but "
-                 "still HUMAN eyes.",
+        "feats": "the lower face is now significantly capybara — soft coarse "
+                 "brown capybara fur completely covers the cheeks, jaw, and "
+                 "neck, a prominent blunt capybara snout pushes forward from "
+                 "the nose, small rounded capybara ears sit visibly on top "
+                 "of his head, sleepy heavy-lidded brown eyes. The forehead "
+                 "and bone structure still hold his identity.",
     },
     {
         "out": "public/demo_pet_octopus.jpg",
-        "feats": "a bulbous violet octopus mantle rising from the top of his "
-                 "head like a hat, small suckered tentacles curling down "
-                 "from where his hair was, a few faint chromatophore spots "
-                 "on his cheeks, but his face stays human and recognizable.",
+        "feats": "a LARGE bulbous violet octopus mantle dominates the top "
+                 "half of the head, replacing the hair entirely — thick "
+                 "purple suckered tentacles cascade down around the face "
+                 "and over the shoulders, the skin shows mottled green-"
+                 "purple chromatophore patches across the cheeks, the eyes "
+                 "are now larger and horizontal-slitted but still in his "
+                 "face. Lower face and jawline remain the man's.",
     },
 ]
 

@@ -1,7 +1,7 @@
 import { useCallback, useRef, useState } from 'react';
 import { useGenImage, useUpload } from '@shared/runtime';
 import { prepareSelfie } from '../utils/selfie';
-import { petById } from '../utils/pets';
+import { petById, PETS } from '../utils/pets';
 import type { PetShot } from '../types';
 
 const CHAT_URL = 'https://chat.aiwaves.tech/aigram/api/game-chat';
@@ -29,6 +29,65 @@ async function chatOnce(system: string, user: string): Promise<string> {
   }
 }
 
+// LLM-matched classification — single chat returns BOTH the species
+// the Society picks AND the matching verdict sentence. Saves a
+// round-trip and guarantees the two are consistent with each other.
+const CLASSIFY_SYSTEM = (
+  'You are a 19th-century natural history society scholar examining ' +
+  'an unknown subject. Classify them under ONE of these twelve known ' +
+  'orders. Each order has character:\n\n' +
+  '- cat (Felis catus) — domestic, alert, gracefully detached\n' +
+  '- dog (Canis familiaris) — loyal, warm, easily moved\n' +
+  '- hamster (Mesocricetus auratus) — small, busy, cheerful, hoards\n' +
+  '- duck (Anas platyrhynchos) — calm, drifty, faintly comic\n' +
+  '- capybara (Hydrochoerus hydrochaeris) — supremely relaxed, kind\n' +
+  '- sloth (Bradypus tridactylus) — slow, dreamy, mossy, benevolent\n' +
+  '- parrot (Ara macao) — vivid, conspicuous, intelligent, vocal\n' +
+  '- axolotl (Ambystoma mexicanum) — perpetually amused, otherworldly\n' +
+  '- hedgehog (Erinaceus europaeus) — cautious, quietly spiky\n' +
+  '- clam (Tridacna gigas) — withdrawn, treasure inside, uncanny\n' +
+  '- octopus (Octopus vulgaris) — improvisational, alien, watchful\n' +
+  '- snail (Helix aspersa) — patient, unhurried, carries home\n\n' +
+  'Output STRICT JSON only, no markdown fences, no commentary:\n' +
+  '{"species": "<id>", "verdict": "<one elegant Victorian-voice sentence>"}\n\n' +
+  'Where <id> is exactly one of: cat, dog, hamster, duck, capybara, ' +
+  'sloth, parrot, axolotl, hedgehog, clam, octopus, snail.\n\n' +
+  'The verdict is a single sentence under 24 words in the voice of ' +
+  'a 19th-c. naturalist (e.g. "The faint set of the brow betrays..." ' +
+  'or "Something in the bearing recalls..."). Do NOT use second ' +
+  'person ("you"). Refer to the subject as "the subject" or "this ' +
+  'specimen". No quotes inside the verdict.'
+);
+
+function buildClassifyUser(selfieUrl: string): string {
+  return `The Society is asked to examine the subject. Portrait under consideration: ${selfieUrl}`;
+}
+
+interface Classification {
+  petId: string;
+  verdict: string;
+}
+
+async function classify(selfieUrl: string): Promise<Classification | null> {
+  const raw = await chatOnce(CLASSIFY_SYSTEM, buildClassifyUser(selfieUrl));
+  if (!raw) return null;
+  // Strip optional markdown code fences.
+  const stripped = raw
+    .replace(/^```(?:json)?\s*/i, '')
+    .replace(/\s*```\s*$/, '')
+    .trim();
+  let parsed: unknown;
+  try { parsed = JSON.parse(stripped); } catch { return null; }
+  if (!parsed || typeof parsed !== 'object') return null;
+  const species = (parsed as { species?: unknown }).species;
+  const verdict = (parsed as { verdict?: unknown }).verdict;
+  if (typeof species !== 'string' || typeof verdict !== 'string') return null;
+  if (!petById(species)) return null;
+  return { petId: species, verdict: verdict.trim() };
+}
+
+// Fallback judgment when classification fails — used for the
+// random-species path so we still have a verdict to show.
 const JUDGMENT_SYSTEM = (
   'You are a 19th-century natural history society scholar writing a ' +
   'verdict for an unknown subject. Output ONE single elegant sentence ' +
@@ -43,6 +102,11 @@ function buildJudgmentUserPrompt(petName: string, latin: string): string {
   return `The Society has classified the subject under the order ${petName} (${latin}). Write the verdict.`;
 }
 
+function randomPetId(exclude?: string): string {
+  const pool = exclude ? PETS.filter((p) => p.id !== exclude) : PETS;
+  return pool[Math.floor(Math.random() * pool.length)].id;
+}
+
 export type Stage = '' | 'uploading' | 'morphing' | 'rendering' | 'settling';
 
 interface GenInput {
@@ -50,7 +114,10 @@ interface GenInput {
    *  the user's Aigram avatar, already hosted by the platform). The
    *  URL path skips the upload step entirely. */
   source: { kind: 'file'; file: File } | { kind: 'url'; url: string };
-  petId: string;
+  /** Optional override — if set, skip Society classification and use
+   *  this species. Used by the petition flow where the caller picks
+   *  a random non-current species to challenge the previous verdict. */
+  forcePetId?: string;
 }
 
 export class CancelledError extends Error {
@@ -89,9 +156,7 @@ export function usePetGen(): UsePetGen {
   }
 
   const generate = useCallback(
-    async ({ source, petId }: GenInput): Promise<PetShot> => {
-      const pet = petById(petId);
-      if (!pet) throw new Error(`unknown pet id: ${petId}`);
+    async ({ source, forcePetId }: GenInput): Promise<PetShot> => {
       if (inFlight.current) throw new Error('pet-gen: already in flight');
       inFlight.current = true;
       cancelRef.current = false;
@@ -100,6 +165,7 @@ export function usePetGen(): UsePetGen {
       setStartedAt(Date.now());
 
       try {
+        // ─── Stage 1: upload selfie if needed ──────────────────────
         let selfieUrl: string;
         if (source.kind === 'url') {
           setStage('uploading');
@@ -115,21 +181,45 @@ export function usePetGen(): UsePetGen {
           selfieUrl = uploaded.url;
         }
 
+        // ─── Stage 2: classify (Society consults the orders) ──────
         setStage('morphing');
-        await new Promise((r) => setTimeout(r, 350));
-        checkCancel();
+        let petId: string;
+        let judgmentText: string | undefined;
+        if (forcePetId && petById(forcePetId)) {
+          // Petition path — caller picked an explicit non-current species.
+          petId = forcePetId;
+          // Fire a simple judgment-only chat to match the forced
+          // species. Run in parallel with img2img to save wall-clock.
+        } else {
+          // Classification path — LLM picks species + writes verdict
+          // in one call. Falls back to random + simple judgment if
+          // the model fails to return valid JSON.
+          const cls = await classify(selfieUrl).catch(() => null);
+          checkCancel();
+          if (cls) {
+            petId = cls.petId;
+            judgmentText = cls.verdict;
+          } else {
+            petId = randomPetId();
+            // judgmentText filled by the parallel chat below.
+          }
+        }
+
+        const pet = petById(petId);
+        if (!pet) throw new Error(`unknown pet id: ${petId}`);
+
+        // ─── Stage 3: img2img + (if needed) separate judgment ──────
         setStage('rendering');
-        // Fire chat call IN PARALLEL with img2img — judgment usually
-        // finishes in 2-5s while img2img takes 30-60s, so it's free.
-        const judgmentPromise = chatOnce(
-          JUDGMENT_SYSTEM,
-          buildJudgmentUserPrompt(pet.name, pet.latin),
-        );
-        const [imageUrl, judgment] = await Promise.all([
+        const needSeparateJudgment = !judgmentText;
+        const judgmentPromise = needSeparateJudgment
+          ? chatOnce(JUDGMENT_SYSTEM, buildJudgmentUserPrompt(pet.name, pet.latin))
+          : Promise.resolve('');
+        const [imageUrl, fallbackJudgment] = await Promise.all([
           genImg({ prompt: pet.prompt, ref_url: selfieUrl }),
           judgmentPromise,
         ]);
         checkCancel();
+        if (!judgmentText) judgmentText = fallbackJudgment || undefined;
 
         await preloadImage(imageUrl);
         checkCancel();
@@ -143,7 +233,7 @@ export function usePetGen(): UsePetGen {
           petName: pet.name,
           imageUrl,
           selfieUrl,
-          judgment: judgment || undefined,
+          judgment: judgmentText,
           createdAt: Date.now(),
         };
         return shot;

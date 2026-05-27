@@ -165,18 +165,19 @@ export default function PetFilter() {
     if (!source) return;
     setError('');
     playClick();
-    // Reset petition counter on a fresh submission.
     setPetitionCount(0);
-    // The Society auto-assigns the species. Random for now; could
-    // become feature-matched against the photo (Vision API) later.
-    const petId = PETS[Math.floor(Math.random() * PETS.length)].id;
-    setPendingPet(petId);
+    // The Society LLM picks the species during processing — but we
+    // need SOMETHING set for the Processing screen's species label
+    // before the verdict lands. Pick a temporary random one (it'll
+    // be overridden by the real shot when generate() resolves).
+    const tentative = PETS[Math.floor(Math.random() * PETS.length)].id;
+    setPendingPet(tentative);
     setPhase('processing');
     try {
       const genSource = source.kind === 'file'
         ? { kind: 'file' as const, file: source.file }
         : { kind: 'url' as const, url: source.url };
-      const shot = await petGen.generate({ source: genSource, petId });
+      const shot = await petGen.generate({ source: genSource });
       setCurrent(shot);
       setCameFromWall(false);
       setPhase('result');
@@ -210,7 +211,7 @@ export default function PetFilter() {
     try {
       const shot = await petGen.generate({
         source: { kind: 'url', url: current.selfieUrl },
-        petId: nextId,
+        forcePetId: nextId,
       });
       setCurrent(shot);
       setCameFromWall(false);

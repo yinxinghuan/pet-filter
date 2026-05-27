@@ -116,16 +116,17 @@ PLATE_STYLE = (
 
 def hybrid(features):
     return (
-        "A 19th-century zoological plate of a STRIKING HYBRID creature. "
-        "Begin with the man in the reference photo — his facial bone "
-        "structure, eye position, jawline, and human shoulders MUST "
-        "still be recognizable underneath. But push the species features "
-        "PROMINENTLY: they should occupy roughly half the head — bold, "
-        "visible, illustrative. This is a STRONG hybrid, not a subtle one. "
-        f"Transform his head this way: {features} "
-        "Balance: ~50% human bone structure visible / ~50% creature features "
-        "covering the surface. Same person, dramatically transformed. "
-        "DO NOT include any plaque, ID number, or written text in the image."
+        "A 19th-century zoological plate of a creature that is MOSTLY ANIMAL "
+        "with subtle traces of human identity buried underneath. Reference "
+        "the photo of the man only loosely — keep his JAWLINE, his EYE "
+        "POSITION, and his HUMAN SHOULDERS visible. Everything else about "
+        "the head should be the species. The creature dominates; the human "
+        "is barely a ghost of identity inside it. "
+        f"Transform him this way: {features} "
+        "Balance: ~30% human (bone structure + eye position + shoulders) / "
+        "~70% creature (fur, ears, snout, eyes, ALL of the surface). "
+        "Lean hard into the animal. DO NOT include any plaque, ID number, "
+        "or written text in the image."
         + PLATE_STYLE
     )
 
@@ -133,33 +134,37 @@ def hybrid(features):
 JOBS = [
     {
         "out": "public/demo_pet_cat.jpg",
-        "feats": "the face is now SUBSTANTIALLY feline — soft tabby fur "
-                 "covers the cheeks, forehead, and jaw, LARGE triangular "
-                 "tabby cat ears rising prominently from his hair, full "
-                 "feline almond-shaped yellow-green eyes with vertical "
-                 "slit pupils replacing his round human eyes, a distinct "
-                 "pink cat nose where his nose was, prominent white "
-                 "whiskers fanning out from the muzzle. The man's bone "
-                 "structure (jaw, shoulders) is still recognizable underneath.",
+        "feats": "the face is now PREDOMINANTLY feline — full tabby cat fur "
+                 "covers ALL of the face (cheeks, forehead, jaw, chin), the "
+                 "skin is no longer visible — only fur. LARGE triangular "
+                 "tabby ears on top of the head replace the hair entirely. "
+                 "The eyes are full feline almond-shape with vertical slit "
+                 "pupils and amber-yellow irises. The nose is a small pink "
+                 "cat triangle. Long white whiskers fan from a furry muzzle. "
+                 "Only the jawline shape + shoulder bone structure subtly "
+                 "hint at the man underneath. He is mostly a cat.",
     },
     {
         "out": "public/demo_pet_capybara.jpg",
-        "feats": "the lower face is now significantly capybara — soft coarse "
-                 "brown capybara fur completely covers the cheeks, jaw, and "
-                 "neck, a prominent blunt capybara snout pushes forward from "
-                 "the nose, small rounded capybara ears sit visibly on top "
-                 "of his head, sleepy heavy-lidded brown eyes. The forehead "
-                 "and bone structure still hold his identity.",
+        "feats": "the face is now PREDOMINANTLY capybara — coarse brown "
+                 "capybara fur covers the entire face and neck, no human "
+                 "skin visible, a large blunt capybara snout extends "
+                 "prominently forward replacing the nose and mouth area, "
+                 "small rounded capybara ears on top of the head replace "
+                 "the hair, sleepy heavy-lidded dark beady eyes. Only the "
+                 "broad facial bone structure + shoulders subtly hint at "
+                 "the human underneath.",
     },
     {
         "out": "public/demo_pet_octopus.jpg",
-        "feats": "a LARGE bulbous violet octopus mantle dominates the top "
-                 "half of the head, replacing the hair entirely — thick "
-                 "purple suckered tentacles cascade down around the face "
-                 "and over the shoulders, the skin shows mottled green-"
-                 "purple chromatophore patches across the cheeks, the eyes "
-                 "are now larger and horizontal-slitted but still in his "
-                 "face. Lower face and jawline remain the man's.",
+        "feats": "the head is now PREDOMINANTLY a large bulbous violet "
+                 "octopus mantle, fully replacing the skull and hair, thick "
+                 "purple suckered tentacles cascade down around the head "
+                 "and over the shoulders covering most of the body, mottled "
+                 "green-purple chromatophore skin replaces all visible flesh, "
+                 "the eyes are large horizontal-slit cephalopod pupils. "
+                 "Only the rough head-position and shoulders subtly hint at "
+                 "the human underneath.",
     },
 ]
 

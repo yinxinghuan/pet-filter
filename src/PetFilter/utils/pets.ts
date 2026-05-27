@@ -50,22 +50,23 @@ const STYLE_SUFFIX = (
 // Each prompt leads with the HYBRID framing. The reference image is
 // the user's photo; the model must keep their face recognizable while
 // overlaying the species-specific features below.
-// HYBRID prompt v3. Balance shifted from 70/30 → 50/50:
-// the species features now occupy roughly HALF the head, but the
-// underlying bone structure (jaw, shoulders, eye position) stays
-// recognizable. Earlier 70/30 version produced "human with a hat";
-// this version produces an honest hybrid creature.
+// HYBRID prompt v4. Pushed further: 30/70 (human/creature).
+// Earlier 50/50 still read as "human face + ears" — too human. Now
+// the creature dominates: full fur, full ears replacing hair, full
+// animal eyes. Only the JAWLINE + EYE POSITION + SHOULDERS subtly
+// hint at the human underneath.
 const HYBRID_PREFIX = (
-  'A 19th-century zoological plate of a STRIKING HYBRID creature. ' +
-  'Begin with the person in the reference photo — their facial bone ' +
-  'structure, eye position, jawline, and human shoulders MUST still ' +
-  'be recognizable underneath. But push the species features ' +
-  'PROMINENTLY: they should occupy roughly half the head — bold, ' +
-  'visible, illustrative. Transform their head this way: '
+  'A 19th-century zoological plate of a creature that is MOSTLY ANIMAL ' +
+  'with subtle traces of human identity buried underneath. Reference ' +
+  'the photo only loosely — keep their JAWLINE, their EYE POSITION, ' +
+  'and their HUMAN SHOULDERS visible. Everything else about the head ' +
+  'should be the species. The creature dominates; the human is barely ' +
+  'a ghost of identity inside it. Transform their head this way: '
 );
 const HYBRID_SUFFIX_GUARD = (
-  ' Balance: ~50% human bone structure visible / ~50% creature features ' +
-  'covering the surface. Same person, dramatically transformed. ' +
+  ' Balance: ~30% human (jawline + eye position + shoulders) / ~70% ' +
+  'creature (fur, ears, snout, eyes — ALL of the surface). Lean hard ' +
+  'into the animal. ' +
   'DO NOT include any plaque, ID number, or written text in the image.'
 );
 
@@ -78,7 +79,7 @@ export const PETS: Pet[] = [
     plate: 'I',
     category: 'everyday',
     tint: '#8B4B3A',
-    prompt: HYBRID_PREFIX + 'the face is now SUBSTANTIALLY feline — soft tabby fur covers the cheeks, forehead, and jaw, LARGE triangular tabby cat ears rising prominently from the hair, full feline almond-shaped yellow-green eyes with vertical slit pupils, a distinct pink cat nose, prominent white whiskers fanning out from the muzzle. Bone structure still recognizable.' + HYBRID_SUFFIX_GUARD + STYLE_SUFFIX,
+    prompt: HYBRID_PREFIX + 'the face is now PREDOMINANTLY feline — full tabby cat fur covers ALL of the face (cheeks, forehead, jaw, chin), only fur visible. LARGE triangular tabby ears replace the hair. Full feline almond-shape eyes with vertical slit pupils and amber-yellow irises. A small pink cat nose triangle. Long white whiskers fan from a furry muzzle. Only jawline + shoulder bones subtly hint at the human.' + HYBRID_SUFFIX_GUARD + STYLE_SUFFIX,
   },
   {
     id: 'dog',
@@ -87,7 +88,7 @@ export const PETS: Pet[] = [
     plate: 'II',
     category: 'everyday',
     tint: '#8B4B3A',
-    prompt: HYBRID_PREFIX + 'the face is now SUBSTANTIALLY canine — soft dog fur covers the cheeks, forehead, and jaw, prominent floppy lop ears hanging from the head, a clear dog snout extending forward from the nose, a wet black dog nose, big warm honest brown eyes, mouth slightly open in a gentle smile. Bone structure still recognizable.' + HYBRID_SUFFIX_GUARD + STYLE_SUFFIX,
+    prompt: HYBRID_PREFIX + 'the face is now PREDOMINANTLY canine — full dog fur covers ALL of the face, no human skin visible. Long floppy lop ears hang from the head replacing the hair. A pronounced dog snout extends forward replacing the nose and mouth area. A wet black dog nose. Big warm brown dog eyes. Mouth slightly open with tongue showing. Only jawline + shoulders subtly hint at the human.' + HYBRID_SUFFIX_GUARD + STYLE_SUFFIX,
   },
   {
     id: 'hamster',
@@ -96,7 +97,7 @@ export const PETS: Pet[] = [
     plate: 'III',
     category: 'everyday',
     tint: '#A67C3F',
-    prompt: HYBRID_PREFIX + 'the face is now SIGNIFICANTLY rodent — large puffy stuffed caramel cheeks dominate the lower face, soft golden fur covers the cheeks and forehead, small round hamster ears sit prominently on the head, a tiny pink twitching nose, bright black bead eyes. Bone structure still recognizable underneath.' + HYBRID_SUFFIX_GUARD + STYLE_SUFFIX,
+    prompt: HYBRID_PREFIX + 'the face is now PREDOMINANTLY hamster — full caramel-golden hamster fur covers ALL of the face, huge stuffed round cheeks puff out from each side, round hamster ears on top of the head, a tiny pink twitching nose. Full black bead-bright hamster eyes. Only jawline + shoulders subtly hint at the human.' + HYBRID_SUFFIX_GUARD + STYLE_SUFFIX,
   },
   {
     id: 'duck',
@@ -105,7 +106,7 @@ export const PETS: Pet[] = [
     plate: 'IV',
     category: 'everyday',
     tint: '#B08C2E',
-    prompt: HYBRID_PREFIX + 'a wide prominent flat orange duck bill protruding from the lower face, soft yellow duckling down covering the cheeks and neck like sideburns, calm dark beady duck eyes, the bone structure underneath still recognizable.' + HYBRID_SUFFIX_GUARD + STYLE_SUFFIX,
+    prompt: HYBRID_PREFIX + 'the head is now PREDOMINANTLY duck — fluffy yellow duckling down covers ALL of the face, a wide flat orange duck bill extends prominently replacing the nose and mouth, no human skin visible, calm dark beady duck eyes. Only jawline + shoulders subtly hint at the human.' + HYBRID_SUFFIX_GUARD + STYLE_SUFFIX,
   },
 
   // ─── Wholesome quirky ───
@@ -116,7 +117,7 @@ export const PETS: Pet[] = [
     plate: 'V',
     category: 'wholesome',
     tint: '#7A5B2F',
-    prompt: HYBRID_PREFIX + 'soft coarse brown capybara fur completely covers the cheeks, jaw, and neck, a prominent blunt capybara snout pushes forward from the nose, small rounded capybara ears sit visibly on top of the head, sleepy heavy-lidded brown eyes. Forehead and bone structure still hold the subject\'s identity.' + HYBRID_SUFFIX_GUARD + STYLE_SUFFIX,
+    prompt: HYBRID_PREFIX + 'the face is now PREDOMINANTLY capybara — coarse brown fur covers ALL of the face and neck, no human skin visible, a large blunt capybara snout extends forward replacing the nose and mouth, small rounded capybara ears on top of the head, sleepy heavy-lidded dark beady eyes. Only broad bone structure + shoulders subtly hint at the human.' + HYBRID_SUFFIX_GUARD + STYLE_SUFFIX,
   },
   {
     id: 'sloth',
@@ -125,7 +126,7 @@ export const PETS: Pet[] = [
     plate: 'VI',
     category: 'wholesome',
     tint: '#6E5F38',
-    prompt: HYBRID_PREFIX + 'shaggy moss-tinged grey-brown sloth fur covers the cheeks, forehead, and jaw, prominent dark mask-patches around the eyes (still the subject\'s eyes underneath), heavy half-lidded dreamy expression, a slow benevolent smile, mossy texture in the fur.' + HYBRID_SUFFIX_GUARD + STYLE_SUFFIX,
+    prompt: HYBRID_PREFIX + 'the face is now PREDOMINANTLY sloth — shaggy moss-tinged grey-brown sloth fur covers ALL of the face and head, no human skin visible, prominent dark mask-patches around large heavy-lidded dreamy sloth eyes, a slow benevolent sloth smile, mossy fur texture. Only jawline + shoulders subtly hint at the human.' + HYBRID_SUFFIX_GUARD + STYLE_SUFFIX,
   },
   {
     id: 'parrot',
@@ -134,7 +135,7 @@ export const PETS: Pet[] = [
     plate: 'VII',
     category: 'wholesome',
     tint: '#A33C2A',
-    prompt: HYBRID_PREFIX + 'brilliant scarlet-red and green feather plumage substantially covers the head — feathers replace the hair and frame the face, a prominent curved black macaw beak extends from where the nose and mouth were, sharp curious birdlike eyes with white feathered eye-rings. Bone structure underneath still recognizable.' + HYBRID_SUFFIX_GUARD + STYLE_SUFFIX,
+    prompt: HYBRID_PREFIX + 'the head is now PREDOMINANTLY macaw — brilliant scarlet-red and green feather plumage covers ALL of the face and head, no human skin visible, a large curved black macaw beak extends prominently replacing the nose and mouth, sharp curious birdlike eyes with bare white-skin eye-rings. Only jawline + shoulders subtly hint at the human.' + HYBRID_SUFFIX_GUARD + STYLE_SUFFIX,
   },
   {
     id: 'axolotl',
@@ -143,7 +144,7 @@ export const PETS: Pet[] = [
     plate: 'VIII',
     category: 'wholesome',
     tint: '#B66D6F',
-    prompt: HYBRID_PREFIX + 'translucent pale pink wet skin replaces the human skin tone across the entire face, prominent feathery axolotl gill fronds fan out from the sides of the head where the ears were, a wide perpetual gentle smile, tiny dark dot eyes, faint amphibian markings. Bone structure underneath still recognizable.' + HYBRID_SUFFIX_GUARD + STYLE_SUFFIX,
+    prompt: HYBRID_PREFIX + 'the head is now PREDOMINANTLY axolotl — translucent pale pink wet amphibian skin replaces all skin, prominent feathery gill fronds fan out from each side of the head (where ears were), a wide perpetual amphibian smile across the lower face, large dark dot eyes, faint amphibian markings. Only jawline + shoulders subtly hint at the human.' + HYBRID_SUFFIX_GUARD + STYLE_SUFFIX,
   },
   {
     id: 'hedgehog',
@@ -152,7 +153,7 @@ export const PETS: Pet[] = [
     plate: 'IX',
     category: 'wholesome',
     tint: '#8C6A3D',
-    prompt: HYBRID_PREFIX + 'a dense thick crown of cream-and-brown hedgehog quills replaces the hair across the top of the head and runs down the back of the neck, soft brown fur on the cheeks and chin, a tiny twitching pink nose, small bead-shiny dark eyes. Bone structure underneath still recognizable.' + HYBRID_SUFFIX_GUARD + STYLE_SUFFIX,
+    prompt: HYBRID_PREFIX + 'the head is now PREDOMINANTLY hedgehog — a dense thick coat of cream-and-brown hedgehog quills covers the top, back, and sides of the head replacing all hair, soft brown hedgehog fur covers the entire face, no human skin visible, a small pointed hedgehog snout with twitching pink nose, small bead-shiny dark eyes. Only jawline + shoulders subtly hint at the human.' + HYBRID_SUFFIX_GUARD + STYLE_SUFFIX,
   },
 
   // ─── Uncanny ───
@@ -163,7 +164,7 @@ export const PETS: Pet[] = [
     plate: 'X',
     category: 'uncanny',
     tint: '#3F6E78',
-    prompt: HYBRID_PREFIX + 'two large calcified ridged white-and-cream giant clam shell halves frame the head like an open helmet (one above, one below the face), prominent ruffled iridescent blue-purple mantle flesh inside the shell, faint eye-spots along the mantle rim, the face peers out from between the shell halves. Bone structure still recognizable.' + HYBRID_SUFFIX_GUARD + STYLE_SUFFIX,
+    prompt: HYBRID_PREFIX + 'the head is now PREDOMINANTLY giant clam — two large calcified ridged white-and-cream clam shell halves enclose most of the head like an open helmet, prominent ruffled iridescent blue-purple mantle flesh inside the shell covers most of the face, eye-spots along the mantle rim, only a small slit shows the original human face peering out. Only jawline + shoulders subtly hint at the human.' + HYBRID_SUFFIX_GUARD + STYLE_SUFFIX,
   },
   {
     id: 'octopus',
@@ -172,7 +173,7 @@ export const PETS: Pet[] = [
     plate: 'XI',
     category: 'uncanny',
     tint: '#5B3A6E',
-    prompt: HYBRID_PREFIX + 'a LARGE bulbous violet octopus mantle dominates the top half of the head, replacing the hair entirely, thick purple suckered tentacles cascade down around the face and over the shoulders, mottled green-purple chromatophore patches across the cheeks, larger horizontal-slit pupil eyes. Lower face and jawline remain the subject\'s.' + HYBRID_SUFFIX_GUARD + STYLE_SUFFIX,
+    prompt: HYBRID_PREFIX + 'the head is now PREDOMINANTLY octopus — a large bulbous violet octopus mantle fully replaces the skull and hair, thick purple suckered tentacles cascade down covering most of the head and shoulders, mottled green-purple chromatophore skin replaces all visible flesh, large horizontal-slit cephalopod eyes. Only jawline + shoulder bones subtly hint at the human.' + HYBRID_SUFFIX_GUARD + STYLE_SUFFIX,
   },
   {
     id: 'snail',
@@ -181,7 +182,7 @@ export const PETS: Pet[] = [
     plate: 'XII',
     category: 'uncanny',
     tint: '#4F5E2A',
-    prompt: HYBRID_PREFIX + 'a LARGE glossy spiral brown snail shell rises prominently from the top and back of the head, two long sensitive snail eye-stalks lift up from the temples (with small black eye-dots at the tips), the skin appears moist and translucent, faint mollusk texture on the cheeks. Lower face and jawline remain the subject\'s.' + HYBRID_SUFFIX_GUARD + STYLE_SUFFIX,
+    prompt: HYBRID_PREFIX + 'the head is now PREDOMINANTLY snail — a large glossy spiral brown snail shell occupies the back of the head, two long sensitive snail eye-stalks rise prominently from the top of the head with black eye-dots at the tips, moist translucent mollusk skin replaces all human skin, faint slime sheen on the face. Only jawline + shoulders subtly hint at the human.' + HYBRID_SUFFIX_GUARD + STYLE_SUFFIX,
   },
 ];
 

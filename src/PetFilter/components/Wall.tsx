@@ -42,6 +42,11 @@ export default function Wall({
   })();
 
   const total = entries.length;
+  // Stats — how many of these are from today, vs total. Gives the
+  // wall the "live archive" feel.
+  const oneDayMs = 1000 * 60 * 60 * 24;
+  const now = Date.now();
+  const todayCount = entries.filter((e) => now - (e.shot.createdAt || 0) < oneDayMs).length;
 
   return (
     <Ticket
@@ -56,7 +61,22 @@ export default function Wall({
         <p className="pf-wall-head__sub"><em>{t('wall_sub')}</em></p>
       </div>
 
-      <div className="pf-section-rule" aria-hidden />
+      {/* Stats banner — three cells separated by hairline rules,
+          like the masthead of a Victorian periodical. */}
+      <div className="pf-wall-stats" aria-label="archive statistics">
+        <div className="pf-wall-stats__cell">
+          <span className="pf-wall-stats__n">{String(total).padStart(2, '0')}</span>
+          <span className="pf-wall-stats__l"><em>on file</em></span>
+        </div>
+        <div className="pf-wall-stats__cell">
+          <span className="pf-wall-stats__n">{String(todayCount).padStart(2, '0')}</span>
+          <span className="pf-wall-stats__l"><em>today</em></span>
+        </div>
+        <div className="pf-wall-stats__cell">
+          <span className="pf-wall-stats__n">XII</span>
+          <span className="pf-wall-stats__l"><em>orders</em></span>
+        </div>
+      </div>
 
       <div className="pf-wall-nav">
         <div className="pf-scope-tabs" role="tablist" aria-label="scope">
@@ -150,6 +170,17 @@ function ListView({ entries, reactionsOf, scope, onSelect }: ViewProps) {
   );
 }
 
+function relativeTime(ts: number): string {
+  const diff = Date.now() - ts;
+  if (diff < 60_000) return 'just now';
+  const m = Math.floor(diff / 60_000);
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  const d = Math.floor(h / 24);
+  return `${d}d ago`;
+}
+
 function WallRow({ entry, idx, scope, mine, onSelect }: {
   entry: WallEntry;
   idx: number;
@@ -171,16 +202,25 @@ function WallRow({ entry, idx, scope, mine, onSelect }: {
     <li>
       <div role="button" tabIndex={0} className="pf-wall-row"
            onClick={() => onSelect(shot, authorMeta)}>
-        <span className="pf-wall-row__plate">Pl. {String(idx).padStart(2, '0')}</span>
         <div className="pf-wall-row__cover" style={{ '--tint': pet?.tint } as React.CSSProperties}>
           <img className="pf-wall-row__img" src={shot.imageUrl} alt={shot.petName} draggable={false} />
         </div>
         <div className="pf-wall-row__info">
-          <div className="pf-wall-row__pet">{shot.petName}</div>
+          <div className="pf-wall-row__topline">
+            <span className="pf-wall-row__plate">Pl. {String(idx).padStart(2, '0')}</span>
+            <span className="pf-wall-row__pet">{shot.petName}</span>
+          </div>
           <div className="pf-wall-row__latin"><em>{pet?.latin ?? ''}</em></div>
-          {scope === 'all' && entry.userName && (
-            <div className="pf-wall-row__by"><em>collected by {entry.userName}</em></div>
-          )}
+          <div className="pf-wall-row__byline">
+            {scope === 'all' && entry.userName ? (
+              <em>collected by {entry.userName}</em>
+            ) : (
+              <em>your specimen</em>
+            )}
+            {shot.createdAt > 0 && (
+              <span className="pf-wall-row__time"><em>· {relativeTime(shot.createdAt)}</em></span>
+            )}
+          </div>
         </div>
         <span className={`pf-like-badge ${mine.size > 0 ? 'is-liked' : ''}`}>
           <ReactionIcon kind={dominant} size={11} />

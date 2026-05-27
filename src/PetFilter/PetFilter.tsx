@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useGameSave } from '@shared/save';
 import { useGameEvent, callAigramAPI, isInAigram, telegramId, type AigramResponse } from '@shared/runtime';
 import FrontispiecePage from './components/FrontispiecePage';
@@ -84,8 +84,28 @@ export default function PetFilter() {
       setCurrent(fakeShot);
       setCameFromWall(false);
       setPhase('result');
-    } else if (demo === 'wall') setPhase('wall');
+    } else if (demo === 'wall' || demo === 'wall-empty') {
+      setPhase('wall');
+    }
   }, []);
+
+  // Populate the wall with sample entries when ?demo=wall so we can
+  // QA the populated state. ?demo=wall-empty leaves it empty.
+  const demoMode = typeof window !== 'undefined'
+    ? new URLSearchParams(window.location.search).get('demo')
+    : null;
+  const demoWallEntries = useMemo<typeof wall.entries>(() => {
+    if (demoMode !== 'wall') return [];
+    const now = Date.now();
+    return [
+      { userId: '1001', userName: 'jenny', shot: { id: 'd-a', petId: 'octopus', petName: 'Common Octopus', imageUrl: '/pet-filter/demo_pet_octopus.jpg', selfieUrl: '', createdAt: now - 1000 * 60 * 32 } },
+      { userId: '1002', userName: 'algram', shot: { id: 'd-b', petId: 'capybara', petName: 'Capybara', imageUrl: '/pet-filter/demo_pet_capybara.jpg', selfieUrl: '', createdAt: now - 1000 * 60 * 90 } },
+      { userId: '1003', userName: 'jm·f', shot: { id: 'd-c', petId: 'cat', petName: 'House Cat', imageUrl: '/pet-filter/demo_pet_cat.jpg', selfieUrl: '', createdAt: now - 1000 * 60 * 60 * 3 } },
+      { userId: '1004', userName: 'isaya', shot: { id: 'd-d', petId: 'axolotl', petName: 'Axolotl', imageUrl: '/pet-filter/cover_axolotl.jpg', selfieUrl: '', createdAt: now - 1000 * 60 * 60 * 5 } },
+      { userId: '1005', userName: 'ghostpixel', shot: { id: 'd-e', petId: 'parrot', petName: 'Scarlet Macaw', imageUrl: '/pet-filter/cover_parrot.jpg', selfieUrl: '', createdAt: now - 1000 * 60 * 60 * 8 } },
+      { userId: '1006', userName: 'isabel', shot: { id: 'd-f', petId: 'hedgehog', petName: 'Hedgehog', imageUrl: '/pet-filter/cover_hedgehog.jpg', selfieUrl: '', createdAt: now - 1000 * 60 * 60 * 22 } },
+    ];
+  }, [demoMode]);
 
   // First-touch audio unlock.
   const firstTouchRef = useRef(false);
@@ -267,14 +287,14 @@ export default function PetFilter() {
         )}
         {phase === 'wall' && (
           <Wall
-            community={wall.entries}
+            community={demoWallEntries.length > 0 ? demoWallEntries : wall.entries}
             mine={shots}
-            loaded={wall.loaded}
+            loaded={demoWallEntries.length > 0 ? true : wall.loaded}
             myReactions={myReactions}
             onBack={current ? handleBackFromWall : undefined}
             onView={handleViewFromWall}
             onNew={handleNew}
-            scope={wallScope}
+            scope={demoWallEntries.length > 0 ? 'all' : wallScope}
             onScopeChange={setWallScope}
           />
         )}

@@ -1114,23 +1114,69 @@
 }
 
 // ─── Wall ─────────────────────────────────────────────────────────────
-.pf-wall-head { margin-bottom: 4px; }
+.pf-wall-head { margin-bottom: 12px; }
 .pf-wall-head__title {
   font-family: @font-display;
-  font-size: 34px;
+  font-size: 32px;
   font-weight: 500;
+  font-style: italic;
   letter-spacing: 0;
   color: @ink;
   margin: 0;
   line-height: 1.05;
-  font-variant: small-caps;
 }
 .pf-wall-head__sub {
   font-family: @font-body;
-  font-size: 13.5px;
+  font-size: 13px;
   color: @ink-soft;
   font-style: italic;
-  margin: 6px 0 0;
+  margin: 4px 0 0;
+}
+
+// Stats banner — three cells with hairline rules between, masthead
+// style. Each cell shows a big serif number + small italic label.
+.pf-wall-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  padding: 10px 0;
+  margin-bottom: 12px;
+  border-top: 1.4px solid @ink;
+  border-bottom: 0.6px solid @ink;
+  position: relative;
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0; right: 0;
+    top: 4px;
+    height: 0.5px;
+    background: @ink;
+  }
+}
+.pf-wall-stats__cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  position: relative;
+  & + & {
+    border-left: 0.6px solid @ink-fade;
+  }
+}
+.pf-wall-stats__n {
+  font-family: @font-display;
+  font-size: 24px;
+  font-weight: 600;
+  color: @ink;
+  letter-spacing: 0.02em;
+  line-height: 1;
+}
+.pf-wall-stats__l {
+  font-family: @font-display;
+  font-size: 11px;
+  font-style: italic;
+  color: @ink-fade;
+  font-variant: small-caps;
+  letter-spacing: 0.04em;
 }
 
 .pf-wall-nav {
@@ -1241,41 +1287,41 @@
   margin-top: 4px;
 }
 
+// Ledger list — each row is a 19c archive index card with a small
+// plate-style image, a topline (plate number + species), the Latin
+// binomial, and a byline + relative date below. Alternating subtle
+// background tone gives the ledger-book feel.
 .pf-wall-list {
   list-style: none;
   margin: 0;
   padding: 0;
-  > li + li {
-    margin-top: 6px;
-    padding-top: 6px;
-    border-top: 0.6px dashed @ink-faint;
+  border-top: 0.6px solid @ink;
+  > li {
+    border-bottom: 0.6px dashed @ink-faint;
+  }
+  > li:nth-child(even) .pf-wall-row {
+    background: rgba(46, 31, 18, 0.025);
+  }
+  > li:last-child {
+    border-bottom: 0.6px solid @ink;
   }
 }
 .pf-wall-row {
   display: grid;
-  grid-template-columns: 40px 64px 1fr auto;
+  grid-template-columns: 60px 1fr auto;
   align-items: center;
   gap: 12px;
-  padding: 6px 4px;
+  padding: 10px 8px;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  &:active { background: rgba(60, 38, 16, 0.06); }
-}
-.pf-wall-row__plate {
-  font-family: @font-display;
-  font-size: 11px;
-  letter-spacing: 0.10em;
-  text-transform: uppercase;
-  color: @ink-fade;
-  text-align: center;
-  font-variant: small-caps;
+  &:active { background: rgba(60, 38, 16, 0.08); }
 }
 .pf-wall-row__cover {
   --tint: @ink;
-  width: 64px;
-  height: 64px;
+  width: 60px;
+  height: 60px;
   background: @paper-deep;
-  border: 1px solid var(--tint);
+  border: 1px solid @ink;
   overflow: hidden;
   position: relative;
   &::after {
@@ -1293,28 +1339,47 @@
   filter: sepia(0.08) contrast(1.02);
 }
 .pf-wall-row__info { min-width: 0; }
+.pf-wall-row__topline {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.pf-wall-row__plate {
+  font-family: @font-display;
+  font-size: 10px;
+  letter-spacing: 0.10em;
+  color: @ink-fade;
+  font-variant: small-caps;
+  flex: 0 0 auto;
+}
 .pf-wall-row__pet {
   font-family: @font-display;
   font-size: 17px;
   font-weight: 500;
+  font-style: italic;
   color: @ink;
-  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  font-variant: small-caps;
 }
 .pf-wall-row__latin {
   font-family: @font-body;
-  font-size: 11.5px;
-  font-style: italic;
-  color: @ink-soft;
-}
-.pf-wall-row__by {
-  font-family: @font-body;
   font-size: 11px;
   font-style: italic;
-  color: @ink-fade;
+  color: @ink-soft;
+  margin-top: 1px;
+}
+.pf-wall-row__byline {
   margin-top: 2px;
+  font-family: @font-body;
+  font-size: 10.5px;
+  font-style: italic;
+  color: @ink-fade;
+}
+.pf-wall-row__time {
+  margin-left: 2px;
+  color: @ink-faint;
 }
 .pf-like-badge {
   display: inline-flex;

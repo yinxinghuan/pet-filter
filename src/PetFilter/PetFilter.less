@@ -1038,6 +1038,16 @@
   letter-spacing: 0.04em;
 }
 
+// Action row — share + petition side-by-side under the caption.
+.pf-result__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 4px;
+}
+
 // Share — letterpress stamp, slightly smaller than primary, tilts
 // the opposite direction so two stamps on the same page (e.g.
 // share + footer hero) don't look identical.
@@ -1084,6 +1094,43 @@
   font-family: @font-display;
   font-size: 16px;
   color: inherit;
+}
+
+// Petition — subordinate to share. Sepia outline chip (like the
+// archive chip), italic label. The Society does this reluctantly, so
+// it feels quieter than the primary call to action.
+.pf-result__petition {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: lighten(@paper, 4%);
+  border: 1px solid @ink-soft;
+  font-family: @font-display;
+  font-size: 12.5px;
+  font-style: italic;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: @ink-soft;
+  cursor: pointer;
+  padding: 7px 14px;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 140ms ease, color 140ms ease, border-color 140ms ease;
+  &:active:not(:disabled) {
+    background: @paper-deep;
+    color: @ink;
+    border-color: @ink;
+  }
+  &:disabled {
+    color: @ink-faint;
+    border-color: @ink-faint;
+    background: transparent;
+    cursor: default;
+    font-size: 11.5px;
+  }
+}
+.pf-result__petition-icon {
+  color: inherit;
+  flex: 0 0 auto;
 }
 
 // ─── Reactions ────────────────────────────────────────────────────────

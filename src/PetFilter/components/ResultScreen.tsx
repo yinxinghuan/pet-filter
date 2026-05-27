@@ -14,14 +14,26 @@ interface Props {
   onShare?: () => void;
   /** Transient label shown next to the share button after a copy. */
   shareLabel?: string;
+  /** Re-run gen with same photo, different species. Omit on wall views. */
+  onPetition?: () => void;
+  /** How many petitions used so far. */
+  petitionCount?: number;
+  /** Max petitions allowed (currently 2). */
+  petitionMax?: number;
 }
 
 const REACTION_ORDER: ReactionKind[] = ['heart', 'fire', 'mind', 'eye'];
 
 export default function ResultScreen({
-  shot, cameFromWall, myReactions, onToggleReaction, onNew, onWall, onShare, shareLabel,
+  shot, cameFromWall, myReactions, onToggleReaction, onNew, onWall, onShare,
+  shareLabel, onPetition, petitionCount = 0, petitionMax = 2,
 }: Props) {
   const pet = petById(shot.petId);
+  const petitionsLeft = petitionMax - petitionCount;
+  const petitionLabel = petitionsLeft <= 0
+    ? t('cta_petition_final')
+    : petitionCount === 0 ? t('cta_petition')
+    : t('cta_petition_used');
 
   return (
     <Ticket
@@ -75,17 +87,33 @@ export default function ResultScreen({
           </div>
         )}
 
-        {/* Share — primary on freshly minted plates, secondary on
-            wall views. Surface clipboard copy for now; platform post
-            share is a TODO. */}
-        {!cameFromWall && onShare && (
-          <button type="button"
-                  className="pf-result__share"
-                  onPointerDown={onShare}
-                  disabled={!!shareLabel}>
-            <span className="pf-result__share-icon" aria-hidden>✎</span>
-            {shareLabel || t('cta_share')}
-          </button>
+        {/* Action row on freshly-minted results — share + petition. */}
+        {!cameFromWall && (
+          <div className="pf-result__actions">
+            {onShare && (
+              <button type="button"
+                      className="pf-result__share"
+                      onPointerDown={onShare}
+                      disabled={!!shareLabel}>
+                <span className="pf-result__share-icon" aria-hidden>✎</span>
+                {shareLabel || t('cta_share')}
+              </button>
+            )}
+            {onPetition && (
+              <button type="button"
+                      className="pf-result__petition"
+                      onPointerDown={petitionsLeft > 0 ? onPetition : undefined}
+                      disabled={petitionsLeft <= 0}>
+                <svg className="pf-result__petition-icon" viewBox="0 0 16 16"
+                     width="13" height="13" fill="none" stroke="currentColor"
+                     strokeWidth="1.1" aria-hidden>
+                  <path d="M3 13 L13 3 M3 13 L3 9 M3 13 L7 13" />
+                  <path d="M11 5 L13 7" />
+                </svg>
+                {petitionLabel}
+              </button>
+            )}
+          </div>
         )}
       </div>
     </Ticket>

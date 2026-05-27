@@ -165,6 +165,8 @@ export default function PetFilter() {
     if (!source) return;
     setError('');
     playClick();
+    // Reset petition counter on a fresh submission.
+    setPetitionCount(0);
     // The Society auto-assigns the species. Random for now; could
     // become feature-matched against the photo (Vision API) later.
     const petId = PETS[Math.floor(Math.random() * PETS.length)].id;
@@ -193,6 +195,44 @@ export default function PetFilter() {
     playClick();
     petGen.cancel();
   };
+
+  // Petition for re-examination — reuse the current shot's selfieUrl
+  // as the source (already on platform R2), pick a NEW random species
+  // distinct from the current verdict, re-run the gen pipeline.
+  const handlePetition = async () => {
+    if (!current || petitionCount >= MAX_PETITIONS) return;
+    setError('');
+    playClick();
+    const otherPets = PETS.filter((p) => p.id !== current.petId);
+    const nextId = otherPets[Math.floor(Math.random() * otherPets.length)].id;
+    setPendingPet(nextId);
+    setPhase('processing');
+    try {
+      const shot = await petGen.generate({
+        source: { kind: 'url', url: current.selfieUrl },
+        petId: nextId,
+      });
+      setCurrent(shot);
+      setCameFromWall(false);
+      setPhase('result');
+      playReveal();
+      const nextShots = [shot, ...(savedData?.shots ?? [])].slice(0, 24);
+      persist({ shots: nextShots, reactions: savedData?.reactions });
+      setLocalExtra((prev) => [shot, ...prev].slice(0, 12));
+      setPetitionCount((n) => n + 1);
+    } catch (e) {
+      const isCancel = e instanceof Error && e.name === 'CancelledError';
+      if (!isCancel) setError(t('err_gen_failed'));
+      setPhase('result');
+    }
+  };
+
+  // Petition count — how many re-examination requests have been used
+  // for the CURRENT submission. Resets on a fresh handleSubmit. Caps
+  // at MAX_PETITIONS (2 re-rolls = 3 total verdicts) to keep the
+  // Society's authority intact.
+  const MAX_PETITIONS = 2;
+  const [petitionCount, setPetitionCount] = useState(0);
 
   // Share — copy a short citation string to clipboard. Platform-side
   // post-share is a future enhancement; clipboard works everywhere.
@@ -283,6 +323,9 @@ export default function PetFilter() {
             onWall={handleWall}
             onShare={handleShare}
             shareLabel={shareLabel || undefined}
+            onPetition={cameFromWall ? undefined : handlePetition}
+            petitionCount={petitionCount}
+            petitionMax={MAX_PETITIONS}
           />
         )}
         {phase === 'wall' && (

@@ -60,7 +60,18 @@ export default function Ticket({
                 className="pf-plate__foot-action"
                 onPointerDown={footerLeftAction.onClick}
               >
-                <span className="pf-plate__foot-arrow">←</span>
+                {/* Tiny archive-card icon: stacked plates, hinged
+                    spine, like a real card-catalog drawer marker. */}
+                <svg className="pf-plate__foot-icon"
+                     viewBox="0 0 16 16" width="13" height="13"
+                     fill="none" stroke="currentColor" strokeWidth="1.1"
+                     strokeLinecap="square" strokeLinejoin="miter"
+                     aria-hidden>
+                  <rect x="2" y="4" width="12" height="9" />
+                  <line x1="2" y1="7" x2="14" y2="7" />
+                  <line x1="2" y1="10" x2="14" y2="10" />
+                  <line x1="6" y1="2" x2="10" y2="2" strokeWidth="1.4" />
+                </svg>
                 {footerLeftAction.label}
               </button>
             ) : (

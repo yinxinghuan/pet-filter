@@ -42,7 +42,7 @@
     font-style: italic;
     font-size: 18px;
     color: var(--ink-soft);
-    margin: 0 0 24px;
+    margin: 0 0 18px;
   }
   .meta {
     font-family: 'JetBrains Mono', monospace;
@@ -53,23 +53,41 @@
     border-top: 1px solid var(--ink-faint);
     border-bottom: 1px solid var(--ink-faint);
     padding: 7px 0;
-    margin: 0 0 28px;
+    margin: 0 0 22px;
     display: flex;
     justify-content: space-between;
+    align-items: center;
     gap: 14px;
     flex-wrap: wrap;
   }
-  .seal {
-    display: inline-block;
-    background: var(--seal);
-    color: #F4EBD7;
-    padding: 3px 10px;
-    border-radius: 999px;
+  /* Locale toggle pills */
+  .locale {
+    display: inline-flex;
+    gap: 2px;
+    padding: 2px;
+    background: rgba(46, 31, 18, 0.06);
+    border-radius: 4px;
+  }
+  .locale button {
+    background: none;
+    border: 0;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 13px;
     letter-spacing: 0.08em;
+    font-variant: small-caps;
+    color: var(--ink-fade);
+    padding: 4px 12px;
+    border-radius: 3px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .locale button.is-active {
+    color: var(--seal);
+    background: rgba(255, 255, 255, 0.55);
+    font-weight: 600;
+    box-shadow: 0 0 0 0.6px var(--ink-fade);
   }
 
-  /* Five live frames side-by-side. Each is the real app at a
-     ?demo=... URL — fully interactive. */
   .grid {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
@@ -114,8 +132,6 @@
     font-size: 12px;
     color: var(--ink-fade);
   }
-
-  /* Phone-frame around the live iframe. */
   .phone {
     position: relative;
     width: 100%;
@@ -135,7 +151,6 @@
     background: var(--paper);
     display: block;
   }
-  /* Tap-here pill — explains the iframe is interactive. */
   .phone__hint {
     position: absolute;
     bottom: -16px;
@@ -151,27 +166,6 @@
     border-radius: 999px;
     white-space: nowrap;
   }
-
-  .open {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-    margin-top: 32px;
-  }
-  @media (max-width: 720px) { .open { grid-template-columns: 1fr; } }
-  .open-card {
-    border: 1px dashed var(--ink-fade);
-    padding: 14px 16px;
-  }
-  .open-card h3 {
-    margin: 0 0 6px;
-    font-family: 'Cormorant Garamond', serif;
-    font-variant: small-caps;
-    font-size: 17px;
-    letter-spacing: 0.04em;
-  }
-  .open-card ul { margin: 0; padding-left: 18px; font-size: 13px; color: var(--ink-soft); }
-  .open-card li { margin: 3px 0; }
 
   .fin {
     margin-top: 36px;
@@ -189,9 +183,11 @@
 <h1>The Five Plates · live</h1>
 <p class="deck"><em>Every plate is the real game — tap into any frame and use it as you would on phone.</em></p>
 <div class="meta">
-  <span>VIEW · 5 PHASES SIDE-BY-SIDE</span>
-  <span>SOURCE · LIVE GAME · ?demo=&lt;phase&gt;</span>
-  <span><span class="seal">9 of 10 audit findings resolved</span></span>
+  <span>SOURCE · LIVE GAME · ?demo=&lt;phase&gt;&amp;locale=&lt;ll&gt;</span>
+  <div class="locale" role="tablist" aria-label="locale">
+    <button id="loc-en" class="is-active" role="tab">English</button>
+    <button id="loc-zh" role="tab">中文</button>
+  </div>
 </div>
 
 <div class="grid">
@@ -202,7 +198,7 @@
       <span class="phase__sb">cover</span>
     </header>
     <div class="phone">
-      <iframe src="./?demo=frontispiece" title="Frontispiece" loading="lazy"></iframe>
+      <iframe data-phase="frontispiece" title="Frontispiece" loading="lazy"></iframe>
       <span class="phone__hint">tap anywhere · live</span>
     </div>
   </article>
@@ -211,11 +207,11 @@
     <header class="phase__hd">
       <span class="phase__n">II</span>
       <span class="phase__nm">Picker</span>
-      <span class="phase__sb">specimen + species</span>
+      <span class="phase__sb">specimen + catalog</span>
     </header>
     <div class="phone">
-      <iframe src="./?demo=picker" title="Picker" loading="lazy"></iframe>
-      <span class="phone__hint">scroll · tap pets · live</span>
+      <iframe data-phase="picker" title="Picker" loading="lazy"></iframe>
+      <span class="phone__hint">scroll · catalog · live</span>
     </div>
   </article>
 
@@ -226,8 +222,8 @@
       <span class="phase__sb">~60s wait</span>
     </header>
     <div class="phone">
-      <iframe src="./?demo=processing" title="Processing" loading="lazy"></iframe>
-      <span class="phone__hint">watch the elapsed counter · live</span>
+      <iframe data-phase="processing" title="Processing" loading="lazy"></iframe>
+      <span class="phone__hint">watch the calipers · live</span>
     </div>
   </article>
 
@@ -238,8 +234,8 @@
       <span class="phase__sb">reveal + share</span>
     </header>
     <div class="phone">
-      <iframe src="./?demo=result" title="Result" loading="lazy"></iframe>
-      <span class="phone__hint">tap 题字并分享 · live</span>
+      <iframe data-phase="result" title="Result" loading="lazy"></iframe>
+      <span class="phone__hint">tap the share stamp · live</span>
     </div>
   </article>
 
@@ -250,32 +246,29 @@
       <span class="phase__sb">community archive</span>
     </header>
     <div class="phone">
-      <iframe src="./?demo=wall" title="Wall" loading="lazy"></iframe>
+      <iframe data-phase="wall" title="Wall" loading="lazy"></iframe>
       <span class="phone__hint">tap the ghost plate · live</span>
     </div>
   </article>
 </div>
 
-<div class="open">
-  <div class="open-card">
-    <h3>Category tooltips</h3>
-    <ul>
-      <li>Section labels 『家常之属』 / 『温良之属』 / 『诡异之属』 don't explain themselves</li>
-      <li>Optional: small ⓘ icon → one-liner tooltip</li>
-    </ul>
-  </div>
-  <div class="open-card">
-    <h3>Batch 6 — atmospheric polish</h3>
-    <ul>
-      <li>Page-turn / parchment-crinkle sounds on phase change</li>
-      <li>Long-press image to save (mobile native)</li>
-      <li>First-open tutorial hint</li>
-    </ul>
-  </div>
-</div>
-
 <p class="fin">— fin —</p>
 
 </div>
+
+<script>
+  // Locale toggle — flips all iframes between EN and ZH.
+  const setLocale = (loc) => {
+    document.querySelectorAll('iframe[data-phase]').forEach((f) => {
+      const phase = f.getAttribute('data-phase');
+      f.src = `./?demo=${phase}&locale=${loc}`;
+    });
+    document.getElementById('loc-en').classList.toggle('is-active', loc === 'en');
+    document.getElementById('loc-zh').classList.toggle('is-active', loc === 'zh');
+  };
+  document.getElementById('loc-en').addEventListener('click', () => setLocale('en'));
+  document.getElementById('loc-zh').addEventListener('click', () => setLocale('zh'));
+  setLocale('en');
+</script>
 </body>
 </html>

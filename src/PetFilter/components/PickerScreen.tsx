@@ -42,6 +42,13 @@ export default function PickerScreen({
     onSubmit(pickedPet);
   };
 
+  // Disabled-CTA copy explains WHICH input is missing.
+  const disabledReasonKey: 'cta_need_specimen' | 'cta_need_species' | null =
+    !source ? 'cta_need_specimen' : !pickedPet ? 'cta_need_species' : null;
+  const heroLabel = ready
+    ? t('cta_transfigure')
+    : disabledReasonKey ? t(disabledReasonKey) : t('cta_transfigure_pending');
+
   const groups: Record<string, Pet[]> = {
     everyday: PETS.filter((p) => p.category === 'everyday'),
     wholesome: PETS.filter((p) => p.category === 'wholesome'),
@@ -64,7 +71,7 @@ export default function PickerScreen({
     <Ticket
       plate={t('plate_header_default')}
       rubric={t('plate_rubric_default')}
-      footerHero={ready ? t('cta_transfigure') : t('cta_transfigure_pending')}
+      footerHero={heroLabel}
       onFooterHeroClick={ready ? handleTransfigure : undefined}
       footerHeroDisabled={!ready}
       footerLeftAction={{ label: t('cta_wall'), onClick: onWall }}
@@ -88,17 +95,28 @@ export default function PickerScreen({
         <span className="pf-fleuron">❦</span>
       </div>
 
-      {/* Specimen — avatar pre-filled or upload */}
+      {/* Specimen — avatar pre-filled or upload. The slot itself is
+          a tap target via nested file input when no specimen on file. */}
       <section className="pf-specimen">
         <div className="pf-specimen__label">{t('upload_label')}</div>
         <div className="pf-specimen__inner">
-          <div className="pf-specimen__slot">
-            {specimenSrc ? (
+          {specimenSrc ? (
+            <div className="pf-specimen__slot">
               <img className="pf-specimen__img" src={specimenSrc} alt="" draggable={false} />
-            ) : (
+            </div>
+          ) : (
+            <label className="pf-specimen__slot pf-specimen__slot--empty">
+              <input
+                type="file"
+                accept="image/*"
+                name="pf-photo-slot"
+                className="pf-specimen__slot-file"
+                onChange={onFile}
+              />
               <UploadGlyph />
-            )}
-          </div>
+              <span className="pf-specimen__slot-hint"><em>{t('upload_tap_hint')}</em></span>
+            </label>
+          )}
           <div className="pf-specimen__side">
             <label className="pf-cta-link">
               <input

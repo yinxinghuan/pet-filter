@@ -104,7 +104,23 @@ export default function Wall({
       {!loaded ? (
         <div className="pf-wall-empty">…</div>
       ) : entries.length === 0 ? (
-        <div className="pf-wall-empty"><em>{t('wall_empty')}</em></div>
+        <button type="button"
+                className="pf-wall-empty pf-wall-empty--cta"
+                onPointerDown={onNew}>
+          <span className="pf-wall-empty__ghost" aria-hidden>
+            <svg viewBox="0 0 80 80" width={64} height={64}
+                 fill="none" stroke="currentColor" strokeWidth={1.2}
+                 strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="40" cy="40" r="32" strokeDasharray="3 3" />
+              <text x="40" y="48" textAnchor="middle"
+                    fontFamily="'Cormorant Garamond', serif"
+                    fontStyle="italic" fontSize="24"
+                    fill="currentColor" stroke="none">+</text>
+            </svg>
+          </span>
+          <span className="pf-wall-empty__text"><em>{t('wall_empty')}</em></span>
+          <span className="pf-wall-empty__hint"><em>— {t('cta_new_pet')} →</em></span>
+        </button>
       ) : view === 'list' ? (
         <ListView entries={entries} reactionsOf={reactionsOf} scope={scope} onSelect={onView} />
       ) : (

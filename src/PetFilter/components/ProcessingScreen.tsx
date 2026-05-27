@@ -3,7 +3,7 @@ import Ticket from './Ticket';
 import { t } from '../i18n';
 import type { Stage } from '../hooks/usePetGen';
 import { petById } from '../utils/pets';
-import { PressureGauge, CaliperFrame, StageIndicators } from './ProcessingInstruments';
+import { CaliperFrame } from './ProcessingInstruments';
 
 interface Props {
   stage: Stage;
@@ -46,7 +46,6 @@ export default function ProcessingScreen({
       rubric={pet ? pet.latin : '…'}
     >
       <div className="pf-proc">
-        {/* Specimen plate framed by caliper rulers + brass corners */}
         <CaliperFrame>
           {selfiePreviewUrl ? (
             <img className="pf-proc__photo-img" src={selfiePreviewUrl} alt="" draggable={false} />
@@ -63,25 +62,16 @@ export default function ProcessingScreen({
           <div className="pf-proc__scan" />
         </CaliperFrame>
 
-        {/* Stage indicators — 4 valves */}
-        <StageIndicators current={stage} />
+        <div className="pf-proc__step"><em>{stageLabel}</em></div>
 
-        {/* Pressure gauge replacing the linear bar */}
-        <div className="pf-proc__gauge">
-          <PressureGauge progress={stage99} label={stageLabel} />
+        {/* Thin engraved progress rule — ink only, no brass. */}
+        <div className="pf-proc__progress" aria-label={`${Math.round(stage99 * 100)} percent`}>
+          <div className="pf-proc__progress-fill"
+               style={{ width: `${stage99 * 100}%` }} />
         </div>
-
-        {/* Brass chronometer line */}
-        <div className="pf-proc__chrono">
-          <span className="pf-proc__chrono-cell">
-            <em>elapsed</em>
-            <strong>{String(elapsedS).padStart(2, '0')}<span className="pf-proc__sep">″</span></strong>
-          </span>
-          <span className="pf-proc__chrono-bar" aria-hidden />
-          <span className="pf-proc__chrono-cell">
-            <em>est. total</em>
-            <strong>~{Math.round(estimatedTotalMs / 1000)}<span className="pf-proc__sep">″</span></strong>
-          </span>
+        <div className="pf-proc__elapsed">
+          <span><em>elapsed</em> {String(elapsedS).padStart(2, '0')}<span className="pf-proc__sep">″</span></span>
+          <span><em>est. total</em> ~{Math.round(estimatedTotalMs / 1000)}<span className="pf-proc__sep">″</span></span>
         </div>
 
         <div className="pf-proc__fineprint"><em>{t('proc_fineprint')}</em></div>

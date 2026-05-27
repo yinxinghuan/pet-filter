@@ -1,6 +1,6 @@
-// Frontispiece — the title page of the volume.
-// Rotating community plate as the centerpiece, decorative title block,
-// row of recent thumbnails, single CTA "Open the volume" → picker.
+// Frontispiece — Victorian title page with laurel-wreathed cartouche
+// and wax-seal medallion. Centerpiece is a rotating live community
+// plate (or a mandala of engravings when no real plates exist).
 
 import { useEffect, useMemo, useState } from 'react';
 import Ticket from './Ticket';
@@ -8,28 +8,26 @@ import { t } from '../i18n';
 import { petById, PETS } from '../utils/pets';
 import { playClick } from '../utils/audio';
 import PetEngraving from './PetEngraving';
+import {
+  LaurelBranch, WaxSeal, RibbonBanner, KnotFloret, CornerOrnament,
+} from './FrontispieceArt';
 import type { PetShot, WallEntry } from '../types';
 
 interface Props {
   entries: WallEntry[];
-  /** Local own shots — included in the rotation when community is sparse. */
   myShots: PetShot[];
-  /** Whether wall data has actually loaded (vs still being fetched). */
   loaded: boolean;
   onOpen: () => void;
   onArchive: () => void;
-  /** Tap a thumbnail = jump straight into wall and view that one. */
   onView: (shot: PetShot, author?: { userId: string; userName?: string; userAvatarUrl?: string }) => void;
 }
 
-// Rotate the hero every N ms.
 const ROTATE_MS = 6500;
+const MANDALA_MS = 3200;
 
 export default function FrontispiecePage({
   entries, myShots, loaded, onOpen, onArchive, onView,
 }: Props) {
-  // Build a single pool — own shots first, then community. Empty if
-  // both are empty (handled by the empty-state branch below).
   const pool: WallEntry[] = useMemo(() => {
     const owns: WallEntry[] = myShots.map((s) => ({ userId: 'self', userName: 'You', shot: s }));
     return [...owns, ...entries];
@@ -42,17 +40,14 @@ export default function FrontispiecePage({
     return () => clearInterval(id);
   }, [pool.length]);
 
-  // Reset index when the pool shrinks below the current cursor.
   useEffect(() => {
     if (idx >= pool.length && pool.length > 0) setIdx(0);
   }, [pool.length, idx]);
 
   const hero = pool.length > 0 ? pool[idx % pool.length] : null;
-  // Show the next three after the hero as thumbnails (wraps around).
   const thumbs: WallEntry[] = useMemo(() => {
     if (pool.length <= 1) return [];
     const offsets = [1, 2, 3].map((d) => (idx + d) % pool.length);
-    // De-dupe in case pool is very small.
     return Array.from(new Set(offsets)).slice(0, 3).map((i) => pool[i]);
   }, [pool, idx]);
 
@@ -67,34 +62,63 @@ export default function FrontispiecePage({
       onFooterHeroClick={handleOpen}
       footerLeftAction={{ label: t('front_cta_archive'), onClick: handleArchive }}
     >
-      <div className="pf-front">
-        {/* Title block */}
-        <div className="pf-front__title-block">
-          <div className="pf-front__house">{t('front_house')}</div>
-          <div className="pf-front__year"><em>{t('front_year')}</em></div>
-          <div className="pf-front__rule" aria-hidden />
-          <div className="pf-front__dash-line">— {t('front_dash_line')} —</div>
-          <h1 className="pf-front__book-title">{t('front_book_title')}</h1>
-          <p className="pf-front__book-sub"><em>{t('front_book_sub')}</em></p>
+      <div className="pf-front pf-front--v2">
+        {/* ─── Title block ─── */}
+        <div className="pf-front__title-wrap">
+          <CornerOrnament size={24} />
+          <div className="pf-front__corner pf-front__corner--tr"><CornerOrnament size={24} flipH /></div>
+          <div className="pf-front__title-block">
+            <div className="pf-front__house">{t('front_house')}</div>
+            <div className="pf-front__year"><em>{t('front_year')} · MMXXVI</em></div>
+            <div className="pf-front__rule-thick" aria-hidden />
+            <div className="pf-front__dash-line">— {t('front_dash_line')} —</div>
+            <h1 className="pf-front__book-title">{t('front_book_title')}</h1>
+            <div className="pf-front__rule-thin" aria-hidden />
+            <p className="pf-front__book-sub"><em>{t('front_book_sub')}</em></p>
+          </div>
+          <div className="pf-front__corner pf-front__corner--bl"><CornerOrnament size={24} flipV /></div>
+          <div className="pf-front__corner pf-front__corner--br"><CornerOrnament size={24} flipH flipV /></div>
         </div>
 
-        {/* Hero plate / empty state */}
-        {!loaded ? (
-          <div className="pf-front__hero pf-front__hero--placeholder" aria-hidden>
-            <div className="pf-front__hero-oval" />
+        {/* Wax seal — single color accent, drops in last */}
+        <div className="pf-front__seal-wrap" aria-hidden>
+          <WaxSeal size={60} />
+        </div>
+
+        {/* ─── Hero plate framed by laurels ─── */}
+        <div className="pf-front__plate-wrap">
+          <div className="pf-front__banner" aria-hidden>
+            <RibbonBanner text="VOL · I" width={120} height={26} />
           </div>
-        ) : hero ? (
-          <FrontHero key={hero.shot.id} entry={hero} onView={onView} />
-        ) : (
-          <FrontEmpty />
-        )}
+          <div className="pf-front__laurel pf-front__laurel--l" aria-hidden>
+            <LaurelBranch side="left" />
+          </div>
+          <div className="pf-front__laurel pf-front__laurel--r" aria-hidden>
+            <LaurelBranch side="right" />
+          </div>
 
-        {/* Star separator */}
-        <div className="pf-front__stars" aria-hidden>⋆ ⋆ ⋆ ⋆ ⋆</div>
+          {!loaded ? (
+            <div className="pf-front__hero pf-front__hero--placeholder" aria-hidden>
+              <div className="pf-front__hero-oval" />
+            </div>
+          ) : hero ? (
+            <FrontHero key={hero.shot.id} entry={hero} onView={onView} />
+          ) : (
+            <FrontEmpty />
+          )}
 
-        {/* Recent thumbnails */}
+          <div className="pf-front__knot" aria-hidden>
+            <KnotFloret size={28} />
+          </div>
+        </div>
+
+        {/* Mandala satellites — only shown in empty state */}
+        {loaded && !hero && <MandalaSatellites />}
+
+        {/* Star separator + thumbnails (only if real data) */}
         {thumbs.length > 0 && (
           <>
+            <div className="pf-front__stars" aria-hidden>⋆ ⋆ ⋆ ⋆ ⋆</div>
             <div className="pf-front__thumbs-label">{t('front_thumbs_label')}</div>
             <ul className="pf-front__thumbs">
               {thumbs.map((e) => {
@@ -133,15 +157,15 @@ export default function FrontispiecePage({
 }
 
 function FrontEmpty() {
-  // Cycle through a small sample of engravings every 2.4s to hint at
-  // what the volume contains, even when no real plates exist.
+  // Big-impact rotating engraving inside the main oval. The 4 satellites
+  // (rendered separately) provide visual density around it.
   const sample = useMemo(() => {
-    const ids = ['cat', 'capybara', 'axolotl', 'octopus', 'snail'];
+    const ids = ['cat', 'capybara', 'axolotl', 'octopus', 'sloth', 'parrot'];
     return ids.map((id) => PETS.find((p) => p.id === id)!).filter(Boolean);
   }, []);
   const [i, setI] = useState(0);
   useEffect(() => {
-    const id = setInterval(() => setI((n) => (n + 1) % sample.length), 2400);
+    const id = setInterval(() => setI((n) => (n + 1) % sample.length), 2800);
     return () => clearInterval(id);
   }, [sample.length]);
   const pet = sample[i];
@@ -150,12 +174,47 @@ function FrontEmpty() {
          style={{ '--tint': pet?.tint } as React.CSSProperties}>
       <div className="pf-front__hero-oval">
         <div className="pf-front__empty-art" key={pet.id}>
-          <PetEngraving id={pet.id} size={180} />
+          <PetEngraving id={pet.id} size={170} />
         </div>
       </div>
       <div className="pf-front__hero-cap">
         <h2 className="pf-front__empty-title">{t('front_empty_title')}</h2>
         <p className="pf-front__empty-sub"><em>{t('front_empty_sub')}</em></p>
+      </div>
+    </div>
+  );
+}
+
+// Four small ovals at NW / NE / SW / SE, each cycling through a
+// different sequence of engravings so the user sees ~12 species before
+// they tap. Used only when no real wall data exists.
+function MandalaSatellites() {
+  const setA = ['dog', 'duck', 'snail'];
+  const setB = ['hedgehog', 'clam', 'hamster'];
+  const setC = ['parrot', 'sloth', 'cat'];
+  const setD = ['octopus', 'capybara', 'axolotl'];
+  const [tick, setTick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setTick((t) => t + 1), MANDALA_MS);
+    return () => clearInterval(id);
+  }, []);
+  return (
+    <div className="pf-front__mandala" aria-hidden>
+      <Satellite at="nw" id={setA[tick % setA.length]} />
+      <Satellite at="ne" id={setB[tick % setB.length]} />
+      <Satellite at="sw" id={setC[tick % setC.length]} />
+      <Satellite at="se" id={setD[tick % setD.length]} />
+    </div>
+  );
+}
+
+function Satellite({ at, id }: { at: 'nw' | 'ne' | 'sw' | 'se'; id: string }) {
+  const pet = PETS.find((p) => p.id === id);
+  return (
+    <div className={`pf-front__satellite pf-front__satellite--${at}`}
+         style={{ '--tint': pet?.tint } as React.CSSProperties}>
+      <div className="pf-front__satellite-oval" key={id}>
+        <PetEngraving id={id} size={44} />
       </div>
     </div>
   );

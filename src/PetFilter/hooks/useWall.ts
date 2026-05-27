@@ -32,6 +32,15 @@ export function useWall(): UseWall {
 
   useEffect(() => {
     const sessionId = getGameUuid();
+    // Always log boot diagnostics so we can verify in production
+    // devtools whether the wall hook even fires + what it sees.
+    // tslint:disable-next-line:no-console
+    console.info('[pet-filter wall]', {
+      isInAigram, sessionId, telegramId,
+      reason: !isInAigram ? 'not in Aigram (api_origin/telegram_id missing)'
+        : !sessionId ? 'no game UUID resolved'
+        : 'will fetch',
+    });
     if (!isInAigram || !sessionId) {
       setLoaded(true);
       return;
@@ -44,6 +53,11 @@ export function useWall(): UseWall {
           'GET',
         );
         const rows = Array.isArray(res?.data) ? res.data : [];
+        // tslint:disable-next-line:no-console
+        console.info('[pet-filter wall] get/data/list →', {
+          rowCount: rows.length,
+          userIds: rows.map((r) => r.user_id),
+        });
 
         const parsed: Array<{ row: SaveRow; shot: PetShot }> = [];
         for (const row of rows) {
@@ -55,6 +69,9 @@ export function useWall(): UseWall {
           } catch { /* skip */ }
           if (parsed.length >= 6) break;
         }
+        // tslint:disable-next-line:no-console
+        console.info('[pet-filter wall] parsed shots →', parsed.length,
+                     'of', rows.length, 'rows');
 
         const profiles = await Promise.all(
           parsed.map(({ row }) =>
@@ -74,7 +91,9 @@ export function useWall(): UseWall {
             shot,
           })),
         );
-      } catch {
+      } catch (err) {
+        // tslint:disable-next-line:no-console
+        console.warn('[pet-filter wall] fetch failed', err);
         if (!cancelled) setEntries([]);
       } finally {
         if (!cancelled) setLoaded(true);

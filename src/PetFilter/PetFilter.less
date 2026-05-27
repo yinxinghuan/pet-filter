@@ -1633,6 +1633,28 @@
   }
 }
 
+// "Alone in the archive" banner — explains why only your own plates
+// show up when nobody else has submitted yet.
+.pf-wall-alone {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  margin: 0 0 12px;
+  background: rgba(46, 31, 18, 0.04);
+  border-left: 2px solid @seal;
+  font-family: @font-body;
+  font-style: italic;
+  font-size: 12.5px;
+  color: @ink-soft;
+}
+.pf-wall-alone__icon {
+  color: @seal;
+  font-family: @font-display;
+  font-size: 14px;
+  flex: 0 0 auto;
+}
+
 .pf-wall-empty {
   padding: 32px 0;
   text-align: center;

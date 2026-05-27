@@ -33,13 +33,18 @@ export default function Wall({
 
   const myTid = telegramId ? String(telegramId) : '';
   const myEntries: WallEntry[] = mine.map((s) => ({ userId: 'self', userName: 'You', shot: s }));
+  const others = myTid ? community.filter((e) => e.userId !== myTid) : community;
   const entries: WallEntry[] = (() => {
     if (scope === 'my') return myEntries;
-    const others = myTid ? community.filter((e) => e.userId !== myTid) : community;
     return [...myEntries, ...others].sort(
       (a, b) => (b.shot.createdAt || 0) - (a.shot.createdAt || 0),
     );
   })();
+  // When viewing 『All』 but no other naturalist has submitted yet,
+  // we surface a small banner that explains the state — otherwise
+  // the wall just shows the user's own plates and they wonder where
+  // everyone else is.
+  const aloneInArchive = scope === 'all' && loaded && others.length === 0;
 
   const total = entries.length;
   // Stats — how many of these are from today, vs total. Gives the
@@ -120,6 +125,13 @@ export default function Wall({
           </button>
         </div>
       </div>
+
+      {aloneInArchive && entries.length > 0 && (
+        <div className="pf-wall-alone" role="note">
+          <span className="pf-wall-alone__icon" aria-hidden>✶</span>
+          <em>{t('wall_alone')}</em>
+        </div>
+      )}
 
       {!loaded ? (
         <div className="pf-wall-empty">…</div>

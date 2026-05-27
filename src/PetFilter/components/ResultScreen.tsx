@@ -33,14 +33,24 @@ export default function ResultScreen({
       footerLeftAction={cameFromWall ? undefined : { label: t('cta_wall'), onClick: onWall }}
     >
       <div className="pf-result">
-        {/* Title block (single voice — was duplicated as
-            "Society determined" + "TITLE"; now just the species). */}
         <h1 className="pf-result__title">{shot.petName}</h1>
         <p className="pf-result__latin"><em>{pet?.latin ?? ''}</em></p>
 
         <div className="pf-result__plate" style={{ '--tint': pet?.tint } as React.CSSProperties}>
           <img className="pf-result__img" src={shot.imageUrl} alt={shot.petName} draggable={false} />
         </div>
+
+        {/* Society's judgment — one-sentence verdict in 19c naturalist
+            voice. Reads as a personal classification even though the
+            species itself was randomly assigned. */}
+        {shot.judgment && (
+          <blockquote className="pf-result__judgment">
+            <span className="pf-result__judgment-quote">“</span>
+            <em>{shot.judgment}</em>
+            <span className="pf-result__judgment-quote pf-result__judgment-quote--close">”</span>
+            <footer className="pf-result__judgment-sig"><em>— the Society</em></footer>
+          </blockquote>
+        )}
 
         <p className="pf-result__caption"><em>{t('result_below_image')}</em></p>
 

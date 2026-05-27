@@ -4,6 +4,45 @@ import { prepareSelfie } from '../utils/selfie';
 import { petById } from '../utils/pets';
 import type { PetShot } from '../types';
 
+const CHAT_URL = 'https://chat.aiwaves.tech/aigram/api/game-chat';
+
+// Single-shot chat helper. Returns the assistant's text or '' on
+// any failure — judgment is decorative so we never block the gen
+// pipeline on chat completion.
+async function chatOnce(system: string, user: string): Promise<string> {
+  try {
+    const res = await fetch(CHAT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messages: [
+          { role: 'system', content: system },
+          { role: 'user', content: user },
+        ],
+      }),
+    });
+    if (!res.ok) return '';
+    const json = (await res.json()) as { choices?: Array<{ message?: { content?: string } }> };
+    return (json.choices?.[0]?.message?.content ?? '').trim();
+  } catch {
+    return '';
+  }
+}
+
+const JUDGMENT_SYSTEM = (
+  'You are a 19th-century natural history society scholar writing a ' +
+  'verdict for an unknown subject. Output ONE single elegant sentence ' +
+  'in the voice of a Victorian naturalist (e.g. "The faint set of ' +
+  "the brow betrays...\", \"Something in the bearing recalls...\"). " +
+  'Do NOT reference photographs, AI, or modern concepts. Do NOT use ' +
+  'second person ("you"). Refer to the subject as "the subject" or ' +
+  '"this specimen". Maximum 24 words. Plain text, no quotes.'
+);
+
+function buildJudgmentUserPrompt(petName: string, latin: string): string {
+  return `The Society has classified the subject under the order ${petName} (${latin}). Write the verdict.`;
+}
+
 export type Stage = '' | 'uploading' | 'morphing' | 'rendering' | 'settling';
 
 interface GenInput {
@@ -80,7 +119,16 @@ export function usePetGen(): UsePetGen {
         await new Promise((r) => setTimeout(r, 350));
         checkCancel();
         setStage('rendering');
-        const imageUrl = await genImg({ prompt: pet.prompt, ref_url: selfieUrl });
+        // Fire chat call IN PARALLEL with img2img — judgment usually
+        // finishes in 2-5s while img2img takes 30-60s, so it's free.
+        const judgmentPromise = chatOnce(
+          JUDGMENT_SYSTEM,
+          buildJudgmentUserPrompt(pet.name, pet.latin),
+        );
+        const [imageUrl, judgment] = await Promise.all([
+          genImg({ prompt: pet.prompt, ref_url: selfieUrl }),
+          judgmentPromise,
+        ]);
         checkCancel();
 
         await preloadImage(imageUrl);
@@ -95,6 +143,7 @@ export function usePetGen(): UsePetGen {
           petName: pet.name,
           imageUrl,
           selfieUrl,
+          judgment: judgment || undefined,
           createdAt: Date.now(),
         };
         return shot;

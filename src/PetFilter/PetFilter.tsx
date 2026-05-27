@@ -72,6 +72,7 @@ export default function PetFilter() {
       petName: 'Capybara',
       imageUrl: '/pet-filter/demo_pet_capybara.jpg',
       selfieUrl: '/pet-filter/demo_pet_cat.jpg',
+      judgment: 'The patient bearing and slow, considering gaze of the subject mark this specimen plainly under the order Capybara.',
       createdAt: Date.now(),
     };
     if (demo === 'frontispiece') setPhase('frontispiece');

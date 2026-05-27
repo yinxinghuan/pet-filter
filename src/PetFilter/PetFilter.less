@@ -985,6 +985,45 @@
   font-style: italic;
 }
 
+// Society's verdict — one-sentence elegant judgment in the voice of
+// a 19c naturalist. Big graceful pull-quote with display quotation
+// marks and a small italic "— the Society" attribution.
+.pf-result__judgment {
+  position: relative;
+  margin: 18px 12px 8px;
+  padding: 4px 26px 0;
+  text-align: center;
+  font-family: @font-display;
+  font-size: 17px;
+  line-height: 1.45;
+  color: @ink;
+  em { font-style: italic; }
+}
+.pf-result__judgment-quote {
+  font-family: @font-display;
+  font-size: 44px;
+  font-weight: 600;
+  color: @ink-faint;
+  position: absolute;
+  top: -14px;
+  left: 6px;
+  line-height: 1;
+  &--close {
+    left: auto;
+    right: 6px;
+    top: auto;
+    bottom: -30px;
+  }
+}
+.pf-result__judgment-sig {
+  margin-top: 10px;
+  font-family: @font-display;
+  font-size: 12.5px;
+  color: @ink-fade;
+  font-style: italic;
+  letter-spacing: 0.04em;
+}
+
 // Share — letterpress stamp, slightly smaller than primary, tilts
 // the opposite direction so two stamps on the same page (e.g.
 // share + footer hero) don't look identical.
@@ -1423,16 +1462,19 @@
   border-top: 0.6px solid @ink;
   margin-top: 10px;
 }
+// Title-case italic — feels like a 19c engraved book title, breathes
+// at the edges, and uses Cormorant's full character set (ascenders +
+// descenders + italic contrast). NOT small-caps uppercase — that
+// stretched the title across the full width and felt billboard-y.
 .pf-front__book-title {
   font-family: @font-display;
-  font-size: 44px;
+  font-size: 56px;
   font-weight: 500;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
+  font-style: italic;
+  letter-spacing: 0;
   margin: 14px 0 6px;
   color: @ink;
-  line-height: 1;
-  font-variant: small-caps;
+  line-height: 1.02;
   text-shadow:
     0 1px 0 rgba(255, 240, 210, 0.5),
     0 -0.5px 0 rgba(46, 31, 18, 0.18);

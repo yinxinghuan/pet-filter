@@ -125,7 +125,7 @@ function FrontDemo({ onOpen }: { onOpen: () => void }) {
       <div className="pf-front__portrait-cap">
         <div className="pf-front__portrait-name">{pet?.name}</div>
         <div className="pf-front__portrait-latin"><em>{pet?.latin}</em></div>
-        <div className="pf-front__portrait-hint"><em>tap the plate · or open below</em></div>
+        <div className="pf-front__portrait-hint"><em>{t('front_tap_hint')}</em></div>
       </div>
     </button>
   );

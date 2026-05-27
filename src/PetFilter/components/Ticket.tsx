@@ -5,6 +5,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { t } from '../i18n';
+import { playPop, hapticTap } from '../utils/audio';
 
 interface FooterAction {
   label: string;
@@ -95,7 +96,10 @@ export default function Ticket({
               <button
                 type="button"
                 className="pf-plate__foot-action"
-                onPointerDown={footerLeftAction.onClick}
+                onPointerDown={() => {
+                  playPop(); hapticTap();
+                  footerLeftAction.onClick();
+                }}
               >
                 {/* Tiny archive-card icon: stacked plates, hinged
                     spine, like a real card-catalog drawer marker. */}
@@ -119,7 +123,10 @@ export default function Ticket({
             <button
               type="button"
               className={`pf-plate__foot-hero ${footerHeroDisabled ? 'is-disabled' : ''}`}
-              onPointerDown={footerHeroDisabled ? undefined : onFooterHeroClick}
+              onPointerDown={footerHeroDisabled ? undefined : () => {
+                playPop(); hapticTap();
+                onFooterHeroClick();
+              }}
               disabled={footerHeroDisabled}
             >
               {footerHeroDirection === 'back' && (

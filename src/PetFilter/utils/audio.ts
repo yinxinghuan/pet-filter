@@ -57,6 +57,46 @@ export function playReveal(): void {
   });
 }
 
+// Satisfying "pop" for tap feedback — short ascending blip + tiny
+// noise pluck. Doubles up two oscillators so it has body.
+export function playPop(): void {
+  const c = getCtx();
+  if (!c) return;
+  const t0 = c.currentTime;
+
+  // Sine sweep — main "boop" body.
+  const o1 = c.createOscillator();
+  const g1 = c.createGain();
+  o1.type = 'sine';
+  o1.frequency.setValueAtTime(440, t0);
+  o1.frequency.exponentialRampToValueAtTime(880, t0 + 0.06);
+  g1.gain.setValueAtTime(0, t0);
+  g1.gain.linearRampToValueAtTime(0.10, t0 + 0.008);
+  g1.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.14);
+  o1.connect(g1).connect(c.destination);
+  o1.start(t0);
+  o1.stop(t0 + 0.16);
+
+  // Pluck — high triangle for sparkle.
+  const o2 = c.createOscillator();
+  const g2 = c.createGain();
+  o2.type = 'triangle';
+  o2.frequency.value = 2200;
+  g2.gain.setValueAtTime(0, t0);
+  g2.gain.linearRampToValueAtTime(0.04, t0 + 0.005);
+  g2.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.08);
+  o2.connect(g2).connect(c.destination);
+  o2.start(t0);
+  o2.stop(t0 + 0.10);
+}
+
+// Small haptic buzz on mobile — best-effort, ignored on desktop.
+export function hapticTap(): void {
+  if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
+    try { navigator.vibrate(8); } catch { /* no-op */ }
+  }
+}
+
 export function playShutter(): void {
   const c = getCtx();
   if (!c) return;

@@ -1,5 +1,13 @@
-// Wall fetch — mirrors album-cover-generator. Returns the 6 most-recent
-// users' latest PetShot, each with author name + avatar.
+// Wall fetch — returns recent PetShots across the 6 most-recent users.
+//
+// Each row's resource_data is a PetSave (cap 20 shots per user).
+// We flatten ALL shots across ALL users, sort newest-first across
+// authors, cap the display count, and resolve each unique user's
+// profile once.
+//
+// We throttle at filter generation (the cost), never at display —
+// older pet portraits stay in the wall. See
+// feedback_throttle_at_input_not_output.
 
 import { useCallback, useEffect, useState } from 'react';
 import {
@@ -85,43 +93,65 @@ export function useWall(): UseWall {
           userIds: rows.map((r) => r.user_id),
         });
 
-        const parsed: Array<{ row: SaveRow; shot: PetShot }> = [];
+        // Flatten ALL shots from each user's save row. Older pattern
+        // only took shots[0] per user, hiding every author's older
+        // portraits behind their newest. Throttle at publish, never
+        // display.
+        const pairs: Array<{ userId: string; shot: PetShot }> = [];
         for (const row of rows) {
           if (!row.user_id || !row.resource_data) continue;
           try {
             const save = JSON.parse(row.resource_data) as PetSave;
-            const shot = save.shots?.[0];
-            if (shot && shot.imageUrl) parsed.push({ row, shot });
+            for (const shot of save.shots || []) {
+              if (shot && shot.imageUrl) {
+                pairs.push({ userId: row.user_id, shot });
+              }
+            }
           } catch { /* skip */ }
-          if (parsed.length >= 6) break;
         }
+        // Newest first across all authors, cap visible count.
+        pairs.sort((a, b) => (b.shot.createdAt ?? 0) - (a.shot.createdAt ?? 0));
+        const limited = pairs.slice(0, 24);
         // tslint:disable-next-line:no-console
-        console.info('[pet-filter wall] parsed shots →', parsed.length,
-                     'of', rows.length, 'rows');
+        console.info('[pet-filter wall] flattened shots →', pairs.length,
+                     'across', rows.length, 'rows; displayed:', limited.length);
 
-        const profiles = await Promise.all(
-          parsed.map(({ row }) =>
-            callAigramAPI<AigramResponse<{ name?: string; head_url?: string }>>(
-              `/note/telegram/user/get/info/by/telegram_id?telegram_id=${encodeURIComponent(row.user_id)}`,
-              'GET',
-            ).catch(() => null),
-          ),
+        // Resolve each unique author's profile once.
+        const uniqueIds = Array.from(new Set(limited.map(p => p.userId)));
+        const profileEntries = await Promise.all(
+          uniqueIds.map(async uid => {
+            try {
+              const r = await callAigramAPI<
+                AigramResponse<{ name?: string; head_url?: string }>
+              >(
+                `/note/telegram/user/get/info/by/telegram_id?telegram_id=${encodeURIComponent(uid)}`,
+                'GET',
+              );
+              return [uid, r?.data ?? null] as const;
+            } catch {
+              return [uid, null] as const;
+            }
+          }),
         );
+        const profileMap = new Map<string, { name?: string; head_url?: string } | null>(profileEntries);
 
         if (cancelled) return;
         setEntries(
-          parsed.map(({ row, shot }, i) => ({
-            userId: row.user_id,
-            userName: profiles[i]?.data?.name,
-            userAvatarUrl: profiles[i]?.data?.head_url,
-            shot,
-          })),
+          limited.map(({ userId, shot }) => {
+            const p = profileMap.get(userId) || null;
+            return {
+              userId,
+              userName: p?.name,
+              userAvatarUrl: p?.head_url,
+              shot,
+            };
+          }),
         );
         setDiagnostics({
           isInAigram, sessionId, telegramId,
           rowsFromPlatform: rows.length,
           userIdsFromPlatform: rows.map((r) => r.user_id),
-          parsedShots: parsed.length,
+          parsedShots: pairs.length,
           error: null,
           fetchStatus: 'ok',
         });

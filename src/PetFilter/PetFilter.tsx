@@ -135,8 +135,18 @@ export default function PetFilter() {
   const [wallScope, setWallScope] = useState<ScopeMode>('my');
   const scopeInitialized = useRef(false);
 
-  const [localExtra, setLocalExtra] = useState<PetShot[]>([]);
-  const shots: PetShot[] = [...localExtra, ...(savedData?.shots ?? [])];
+  // Local mirror — useGameSave.savedData does NOT update after persist(),
+  // so handleSubmit/handlePetition's [shot, ...savedData?.shots] saw the
+  // pre-first-publish (stale) base on subsequent publishes and quietly
+  // overwrote older shots. See feedback_useGameSave_local_mirror.md.
+  const [mirror, setMirror] = useState<PetSave | undefined>(undefined);
+  useEffect(() => {
+    if (mirror === undefined && savedData !== undefined) {
+      setMirror(savedData ?? { shots: [], reactions: {} });
+    }
+  }, [savedData, mirror]);
+
+  const shots: PetShot[] = mirror?.shots ?? [];
 
   useEffect(() => {
     if (scopeInitialized.current) return;
@@ -151,14 +161,10 @@ export default function PetFilter() {
   // (known issue, also documented in Album Cover Generator). So we
   // keep a local mirror that the UI reads first; saved data merges in
   // when it eventually rehydrates.
-  const [localReactions, setLocalReactions] = useState<Record<string, ReactionKind[]>>({});
   const myReactions = (() => {
     const out = new Map<string, Set<ReactionKind>>();
-    const merged: Record<string, ReactionKind[]> = {
-      ...(savedData?.reactions ?? {}),
-      ...localReactions,
-    };
-    for (const [id, kinds] of Object.entries(merged)) {
+    const reactions = mirror?.reactions ?? {};
+    for (const [id, kinds] of Object.entries(reactions)) {
       out.set(id, new Set(kinds));
     }
     return out;
@@ -177,10 +183,12 @@ export default function PetFilter() {
       reactions[id] = id === shotId ? [...set] : [...kinds];
     }
     if (!reactions[shotId]) reactions[shotId] = [...set];
-    // Update the local mirror immediately so this render flips the
-    // button to its active state, then persist to the platform.
-    setLocalReactions((prev) => ({ ...prev, [shotId]: [...set] }));
-    persist({ shots: savedData?.shots ?? [], reactions });
+    const nextSave: PetSave = {
+      shots: mirror?.shots ?? [],
+      reactions,
+    };
+    setMirror(nextSave);
+    persist(nextSave);
   };
 
   // ─── Phase transitions ────────────────────────────────────────────
@@ -208,9 +216,12 @@ export default function PetFilter() {
       setCameFromWall(false);
       setPhase('result');
       playReveal();
-      const nextShots = [shot, ...(savedData?.shots ?? [])].slice(0, 24);
-      persist({ shots: nextShots, reactions: savedData?.reactions });
-      setLocalExtra((prev) => [shot, ...prev].slice(0, 12));
+      const nextSave: PetSave = {
+        shots: [shot, ...(mirror?.shots ?? [])].slice(0, 24),
+        reactions: mirror?.reactions ?? {},
+      };
+      setMirror(nextSave);
+      persist(nextSave);
     } catch (e) {
       const isCancel = e instanceof Error && e.name === 'CancelledError';
       if (!isCancel) setError(t('err_gen_failed'));
@@ -243,9 +254,12 @@ export default function PetFilter() {
       setCameFromWall(false);
       setPhase('result');
       playReveal();
-      const nextShots = [shot, ...(savedData?.shots ?? [])].slice(0, 24);
-      persist({ shots: nextShots, reactions: savedData?.reactions });
-      setLocalExtra((prev) => [shot, ...prev].slice(0, 12));
+      const nextSave: PetSave = {
+        shots: [shot, ...(mirror?.shots ?? [])].slice(0, 24),
+        reactions: mirror?.reactions ?? {},
+      };
+      setMirror(nextSave);
+      persist(nextSave);
       setPetitionCount((n) => n + 1);
     } catch (e) {
       const isCancel = e instanceof Error && e.name === 'CancelledError';
@@ -308,9 +322,12 @@ export default function PetFilter() {
   // the Wall long-press overlay.
   const handleDeleteById = (shotId: string) => {
     playClick();
-    const nextShots = (savedData?.shots ?? []).filter((s) => s.id !== shotId);
-    setLocalExtra((prev) => prev.filter((s) => s.id !== shotId));
-    persist({ shots: nextShots, reactions: savedData?.reactions });
+    const nextSave: PetSave = {
+      shots: (mirror?.shots ?? []).filter((s) => s.id !== shotId),
+      reactions: mirror?.reactions ?? {},
+    };
+    setMirror(nextSave);
+    persist(nextSave);
     // If we were viewing the deleted plate, bounce back to wall.
     if (current && current.id === shotId) {
       setCurrent(null);
@@ -378,12 +395,8 @@ export default function PetFilter() {
           />
         )}
         {phase === 'result' && current && (() => {
-          // A plate is "mine" if its id appears in our local discography
-          // (savedData.shots ∪ localExtra). Used to gate delete + author.
-          const mineIds = new Set([
-            ...(savedData?.shots ?? []).map((s) => s.id),
-            ...localExtra.map((s) => s.id),
-          ]);
+          // A plate is "mine" if its id appears in our local discography.
+          const mineIds = new Set((mirror?.shots ?? []).map((s) => s.id));
           const isMine = mineIds.has(current.id);
           return (
             <ResultScreen

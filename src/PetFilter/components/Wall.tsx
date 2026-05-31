@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import Ticket from './Ticket';
 import { t } from '../i18n';
 import { useGameStats } from '@shared/runtime/useGameStats';
-import { isInAigram, telegramId } from '@shared/runtime/bridge';
+import { isInAigram, telegramId, openAigramProfile } from '@shared/runtime/bridge';
 import { fallbackTotal, dominantReaction, reactionAggregateEvent } from '../utils/reactions';
 import { useLongPress } from '../hooks/useLongPress';
 import { playPop, hapticTap } from '../utils/audio';
@@ -347,16 +347,35 @@ function WallRow({ entry, idx, scope, mine, onSelect, armed, canDelete, onArm, o
             {entry.userId === 'self' ? (
               <em>your specimen</em>
             ) : (
-              // Even if the profile fetch fails (userName undefined),
-              // we still need to attribute the plate to *someone* —
-              // fall back to a short userId so the row never reads
-              // 『your specimen』 for somebody else's work.
-              <em>
-                collected by{' '}
+              // Author chip — avatar + name in a tappable button that
+              // opens the user's Aigram profile. cross-user-avatar +
+              // cross-user-profile-tap skills.
+              <button
+                type="button"
+                className="pf-wall-row__author-chip"
+                onClick={(ev) => {
+                  ev.stopPropagation();
+                  if (isInAigram) openAigramProfile(entry.userId);
+                }}
+                disabled={!isInAigram}
+                aria-label={`Open ${entry.userName || 'collector'}'s profile`}
+              >
+                <em>collected by </em>
+                {entry.userAvatarUrl ? (
+                  <span className="pf-wall-row__author-avatar" aria-hidden>
+                    <img src={entry.userAvatarUrl} alt="" draggable={false} referrerPolicy="no-referrer" />
+                  </span>
+                ) : (
+                  <span className="pf-wall-row__author-avatar" aria-hidden>
+                    <span className="pf-wall-row__author-letter">
+                      {(entry.userName || '?')[0]?.toUpperCase()}
+                    </span>
+                  </span>
+                )}
                 <span className="pf-wall-row__by-name">
                   {entry.userName || `user ${entry.userId.slice(0, 6)}`}
                 </span>
-              </em>
+              </button>
             )}
             {shot.createdAt > 0 && (
               <span className="pf-wall-row__time"><em>· {relativeTime(shot.createdAt)}</em></span>

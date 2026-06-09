@@ -176,7 +176,33 @@ export default function PetFilter() {
     if (set.has(kind)) return;
     const isFirstReactionOnShot = set.size === 0;
     set.add(kind);
-    events.trigger(`react:${shotId}:${kind}`);
+    // The wall-view setter wires `setCurrent(shot)` + `setCurrentAuthor`,
+    // so when the reaction fires we always know whose plate this is.
+    const shot = current;
+    const authorId = currentAuthor?.userId;
+    const selfId = telegramId || 'self';
+    const isOther = !!authorId && authorId !== 'self' && authorId !== selfId;
+    const reactTmpl =
+      kind === 'heart' ? '{sender_name} loved your specimen.' :
+      kind === 'fire'  ? '{sender_name} was struck by your specimen.' :
+      kind === 'mind'  ? '{sender_name} marvelled at your specimen.' :
+                         '{sender_name} kept an eye on your specimen.';
+    const config = (isOther && shot && shot.imageUrl)
+      ? {
+          actions: [
+            {
+              type: 'notify',
+              target_user_id: authorId!,
+              image: {
+                ref_url: shot.imageUrl,
+                prompt: `${shot.petName ?? 'specimen'} field-guide plate, 19th-c. natural-history engraving`,
+              },
+              message: { template: reactTmpl, variables: ['sender_name'] },
+            },
+          ],
+        }
+      : undefined;
+    events.trigger(`react:${shotId}:${kind}`, config);
     if (isFirstReactionOnShot) events.trigger(`react:${shotId}`);
     const reactions: Record<string, ReactionKind[]> = {};
     for (const [id, kinds] of myReactions) {

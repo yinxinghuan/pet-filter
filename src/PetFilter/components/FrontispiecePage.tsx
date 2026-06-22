@@ -25,9 +25,9 @@ const ROTATE_MS = 6500;
 // Curated demo portraits used when no real community data exists yet.
 // These are pre-generated img2img outputs (see gen_demo_portraits.py).
 const DEMO_PORTRAITS = [
-  { src: '/pet-filter/demo_pet_cat.jpg',       petId: 'cat' },
-  { src: '/pet-filter/demo_pet_capybara.jpg',  petId: 'capybara' },
-  { src: '/pet-filter/demo_pet_octopus.jpg',   petId: 'octopus' },
+  { src: (new URL(import.meta.env.BASE_URL + 'demo_pet_cat.jpg', location.href).href),       petId: 'cat' },
+  { src: (new URL(import.meta.env.BASE_URL + 'demo_pet_capybara.jpg', location.href).href),  petId: 'capybara' },
+  { src: (new URL(import.meta.env.BASE_URL + 'demo_pet_octopus.jpg', location.href).href),   petId: 'octopus' },
 ];
 
 export default function FrontispiecePage({

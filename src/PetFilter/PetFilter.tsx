@@ -76,8 +76,8 @@ export default function PetFilter() {
       id: 'demo-cap',
       petId: 'capybara',
       petName: 'Capybara',
-      imageUrl: '/pet-filter/demo_pet_capybara.jpg',
-      selfieUrl: '/pet-filter/demo_pet_cat.jpg',
+      imageUrl: (new URL(import.meta.env.BASE_URL + 'demo_pet_capybara.jpg', location.href).href),
+      selfieUrl: (new URL(import.meta.env.BASE_URL + 'demo_pet_cat.jpg', location.href).href),
       judgment: 'The patient bearing and slow, considering gaze of the subject mark this specimen plainly under the order Capybara.',
       createdAt: Date.now(),
     };
@@ -110,12 +110,12 @@ export default function PetFilter() {
     if (demoMode !== 'wall') return [];
     const now = Date.now();
     return [
-      { userId: '1001', userName: 'jenny', shot: { id: 'd-a', petId: 'octopus', petName: 'Common Octopus', imageUrl: '/pet-filter/demo_pet_octopus.jpg', selfieUrl: '', createdAt: now - 1000 * 60 * 32 } },
-      { userId: '1002', userName: 'algram', shot: { id: 'd-b', petId: 'capybara', petName: 'Capybara', imageUrl: '/pet-filter/demo_pet_capybara.jpg', selfieUrl: '', createdAt: now - 1000 * 60 * 90 } },
-      { userId: '1003', userName: 'jm·f', shot: { id: 'd-c', petId: 'cat', petName: 'House Cat', imageUrl: '/pet-filter/demo_pet_cat.jpg', selfieUrl: '', createdAt: now - 1000 * 60 * 60 * 3 } },
-      { userId: '1004', userName: 'isaya', shot: { id: 'd-d', petId: 'axolotl', petName: 'Axolotl', imageUrl: '/pet-filter/cover_axolotl.jpg', selfieUrl: '', createdAt: now - 1000 * 60 * 60 * 5 } },
-      { userId: '1005', userName: 'ghostpixel', shot: { id: 'd-e', petId: 'parrot', petName: 'Scarlet Macaw', imageUrl: '/pet-filter/cover_parrot.jpg', selfieUrl: '', createdAt: now - 1000 * 60 * 60 * 8 } },
-      { userId: '1006', userName: 'isabel', shot: { id: 'd-f', petId: 'hedgehog', petName: 'Hedgehog', imageUrl: '/pet-filter/cover_hedgehog.jpg', selfieUrl: '', createdAt: now - 1000 * 60 * 60 * 22 } },
+      { userId: '1001', userName: 'jenny', shot: { id: 'd-a', petId: 'octopus', petName: 'Common Octopus', imageUrl: (new URL(import.meta.env.BASE_URL + 'demo_pet_octopus.jpg', location.href).href), selfieUrl: '', createdAt: now - 1000 * 60 * 32 } },
+      { userId: '1002', userName: 'algram', shot: { id: 'd-b', petId: 'capybara', petName: 'Capybara', imageUrl: (new URL(import.meta.env.BASE_URL + 'demo_pet_capybara.jpg', location.href).href), selfieUrl: '', createdAt: now - 1000 * 60 * 90 } },
+      { userId: '1003', userName: 'jm·f', shot: { id: 'd-c', petId: 'cat', petName: 'House Cat', imageUrl: (new URL(import.meta.env.BASE_URL + 'demo_pet_cat.jpg', location.href).href), selfieUrl: '', createdAt: now - 1000 * 60 * 60 * 3 } },
+      { userId: '1004', userName: 'isaya', shot: { id: 'd-d', petId: 'axolotl', petName: 'Axolotl', imageUrl: (new URL(import.meta.env.BASE_URL + 'cover_axolotl.jpg', location.href).href), selfieUrl: '', createdAt: now - 1000 * 60 * 60 * 5 } },
+      { userId: '1005', userName: 'ghostpixel', shot: { id: 'd-e', petId: 'parrot', petName: 'Scarlet Macaw', imageUrl: (new URL(import.meta.env.BASE_URL + 'cover_parrot.jpg', location.href).href), selfieUrl: '', createdAt: now - 1000 * 60 * 60 * 8 } },
+      { userId: '1006', userName: 'isabel', shot: { id: 'd-f', petId: 'hedgehog', petName: 'Hedgehog', imageUrl: (new URL(import.meta.env.BASE_URL + 'cover_hedgehog.jpg', location.href).href), selfieUrl: '', createdAt: now - 1000 * 60 * 60 * 22 } },
     ];
   }, [demoMode]);
 

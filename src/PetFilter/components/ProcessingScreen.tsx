@@ -85,7 +85,7 @@ export default function ProcessingScreen({
           <div className="pf-proc__consider-plate" key={considered.id}
                style={{ '--tint': considered.tint } as React.CSSProperties}>
             <img className="pf-proc__consider-img"
-                 src={`/pet-filter/cover_${considered.id}.jpg`}
+                 src={`cover_${considered.id}.jpg`}
                  alt={considered.name}
                  draggable={false} />
           </div>

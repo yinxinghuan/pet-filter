@@ -60,7 +60,7 @@ function BestiaryCard({ pet }: { pet: Pet }) {
     <li className="pf-bestiary__card" style={{ '--tint': pet.tint } as React.CSSProperties}>
       <div className="pf-bestiary__plate">
         <img className="pf-bestiary__img"
-             src={`/pet-filter/cover_${pet.id}.jpg`}
+             src={`cover_${pet.id}.jpg`}
              alt={pet.name}
              draggable={false} />
       </div>

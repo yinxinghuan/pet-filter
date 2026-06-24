@@ -17,6 +17,7 @@ import {
   type AigramResponse,
 } from '@shared/runtime/bridge';
 import { getGameUuid } from '@shared/runtime/game-id';
+import { messagesByTarget, type GuestMessage } from '@shared/social/guestbook';
 import type { PetSave, PetShot, WallEntry } from '../types';
 
 interface SaveRow {
@@ -40,6 +41,9 @@ export interface WallDiagnostics {
 
 export interface UseWall {
   entries: WallEntry[];
+  /** Best-effort guestbook notes from every readable blob, grouped by
+   *  the plate (PetShot) id they were left on. */
+  messagesByTarget: Map<string, GuestMessage[]>;
   loaded: boolean;
   refresh: () => void;
   diagnostics: WallDiagnostics;
@@ -47,6 +51,7 @@ export interface UseWall {
 
 export function useWall(): UseWall {
   const [entries, setEntries] = useState<WallEntry[]>([]);
+  const [notesByTarget, setNotesByTarget] = useState<Map<string, GuestMessage[]>>(new Map());
   const [loaded, setLoaded] = useState(false);
   const [nonce, setNonce] = useState(0);
   const [diagnostics, setDiagnostics] = useState<WallDiagnostics>({
@@ -116,8 +121,24 @@ export function useWall(): UseWall {
         console.info('[pet-filter wall] flattened shots →', pairs.length,
                      'across', rows.length, 'rows; displayed:', limited.length);
 
-        // Resolve each unique author's profile once.
-        const uniqueIds = Array.from(new Set(limited.map(p => p.userId)));
+        // Guestbook notes — parsed off the SAME rows (no extra fetch),
+        // grouped by the plate id they were left on. Each note's
+        // fromUserId is stamped from its owning row's user_id.
+        const byTarget = messagesByTarget(
+          rows
+            .filter((r) => r.user_id && r.resource_data)
+            .map((r) => ({ user_id: r.user_id, resource_data: r.resource_data! })),
+        );
+
+        // Resolve each unique author's profile once — both plate authors
+        // AND note authors, so a note's chip can show avatar + name.
+        const noteAuthorIds = new Set<string>();
+        for (const list of byTarget.values()) {
+          for (const m of list) if (m.fromUserId) noteAuthorIds.add(m.fromUserId);
+        }
+        const uniqueIds = Array.from(
+          new Set([...limited.map((p) => p.userId), ...noteAuthorIds]),
+        );
         const profileEntries = await Promise.all(
           uniqueIds.map(async uid => {
             try {
@@ -147,6 +168,18 @@ export function useWall(): UseWall {
             };
           }),
         );
+        // Stamp each note with its author's display fields.
+        const stampedNotes = new Map<string, GuestMessage[]>();
+        for (const [target, list] of byTarget) {
+          stampedNotes.set(
+            target,
+            list.map((m) => {
+              const p = m.fromUserId ? profileMap.get(m.fromUserId) || null : null;
+              return { ...m, userName: p?.name, userAvatarUrl: p?.head_url };
+            }),
+          );
+        }
+        setNotesByTarget(stampedNotes);
         setDiagnostics({
           isInAigram, sessionId, telegramId,
           rowsFromPlatform: rows.length,
@@ -172,7 +205,7 @@ export function useWall(): UseWall {
     return () => { cancelled = true; };
   }, [nonce]);
 
-  return { entries, loaded, refresh, diagnostics };
+  return { entries, messagesByTarget: notesByTarget, loaded, refresh, diagnostics };
 }
 
 export function isSelf(entry: WallEntry): boolean {

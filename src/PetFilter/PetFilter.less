@@ -2463,6 +2463,155 @@ body {
   to   { opacity: 1; transform: scale(1); }
 }
 
+// ─── Guestbook (marginalia / 留言) ──────────────────────────────────
+.pf-notes {
+  margin-top: 22px;
+  padding-top: 16px;
+  border-top: 1px solid @paper-edge;
+}
+.pf-notes__heading {
+  margin: 0;
+  font-family: @font-display;
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: @ink;
+}
+.pf-notes__sub {
+  margin: 2px 0 12px;
+  font-family: @font-body;
+  font-size: 12px;
+  color: @ink-fade;
+  em { font-style: italic; }
+}
+.pf-notes__empty {
+  margin: 6px 0 12px;
+  font-family: @font-body;
+  font-size: 13px;
+  color: @ink-faint;
+  em { font-style: italic; }
+}
+.pf-notes__list {
+  list-style: none;
+  margin: 0 0 14px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.pf-note {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: baseline;
+  gap: 6px 8px;
+  padding-bottom: 9px;
+  border-bottom: 1px dotted @paper-edge;
+  &:last-child { border-bottom: none; padding-bottom: 0; }
+}
+.pf-note__who {
+  appearance: none;
+  border: none;
+  background: none;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  &[disabled] { cursor: default; }
+}
+.pf-note__avatar {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 1px solid @ink-faint;
+  background: @paper-deep;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  &--self { border-color: @seal; }
+}
+.pf-note__letter {
+  font-family: @font-display;
+  font-size: 11px;
+  font-weight: 600;
+  color: @ink-soft;
+}
+.pf-note__name {
+  font-family: @font-display;
+  font-size: 13px;
+  font-weight: 600;
+  color: @ink;
+  white-space: nowrap;
+  &.is-self { color: @seal; font-style: italic; }
+}
+.pf-note__text {
+  grid-column: 1 / -1;
+  font-family: @font-body;
+  font-size: 14px;
+  line-height: 1.4;
+  color: @ink-soft;
+  word-break: break-word;
+}
+.pf-note__time {
+  font-family: @font-mono;
+  font-size: 10px;
+  color: @ink-faint;
+  white-space: nowrap;
+  em { font-style: normal; }
+}
+.pf-notes__compose {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+.pf-notes__input {
+  flex: 1 1 auto;
+  min-width: 0;
+  appearance: none;
+  border: 1px solid @paper-edge;
+  border-radius: 2px;
+  background: lighten(@paper, 3%);
+  font-family: @font-body;
+  font-size: 14px;
+  color: @ink;
+  padding: 8px 10px;
+  -webkit-tap-highlight-color: transparent;
+  &::placeholder { color: @ink-faint; font-style: italic; }
+  &:focus { outline: none; border-color: @ink-fade; }
+}
+.pf-notes__send {
+  appearance: none;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid @ink;
+  border-radius: 2px;
+  background: @ink;
+  color: @paper;
+  font-family: @font-display;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0 12px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 90ms ease, opacity 120ms ease;
+  &:active { transform: scale(0.96); }
+  &[disabled] { opacity: 0.4; cursor: default; }
+}
+.pf-notes__hint {
+  margin: 4px 0 0;
+  font-family: @font-body;
+  font-size: 12px;
+  color: @ink-faint;
+  em { font-style: italic; }
+}
+
 button { font-family: inherit; }
 input { font-family: inherit; }
 * { box-sizing: border-box; }

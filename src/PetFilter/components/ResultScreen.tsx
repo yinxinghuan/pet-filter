@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import Ticket from './Ticket';
-import { t } from '../i18n';
+import { t, tLocale } from '../i18n';
 import { petById } from '../utils/pets';
 import type { PetShot, ReactionKind } from '../types';
 import ReactionIcon from './ReactionIcons';
 import { playPop, hapticTap } from '../utils/audio';
-import { openAigramProfile } from '@shared/runtime/bridge';
+import { openAigramProfile, isInAigram } from '@shared/runtime/bridge';
+import { MAX_LEN, timeAgo, type GuestMessage } from '@shared/social/guestbook';
 
 interface Props {
   shot: PetShot;
@@ -27,6 +28,15 @@ interface Props {
   petitionMax?: number;
   /** When this plate is the user's own, allow them to discard it. */
   onDelete?: () => void;
+  /** Guestbook thread for this plate (best-effort wall notes ∪ own),
+   *  oldest-first. Always supplied — may be empty. */
+  notes?: GuestMessage[];
+  /** Current player's id — own notes render as "you", no profile button. */
+  myUserId?: string;
+  /** Compose box only shows when in Aigram (we can persist + notify). */
+  canCompose?: boolean;
+  /** Leave a note on this plate. */
+  onSendNote?: (text: string) => void;
 }
 
 const REACTION_ORDER: ReactionKind[] = ['heart', 'fire', 'mind', 'eye'];
@@ -34,6 +44,7 @@ const REACTION_ORDER: ReactionKind[] = ['heart', 'fire', 'mind', 'eye'];
 export default function ResultScreen({
   shot, cameFromWall, author, myReactions, onToggleReaction, onNew, onWall, onShare,
   shareLabel, onPetition, petitionCount = 0, petitionMax = 2, onDelete,
+  notes, myUserId, canCompose, onSendNote,
 }: Props) {
   // Confirmation state for the discard action — first tap arms it,
   // second tap within 5s confirms. Avoids accidental deletion.
@@ -184,8 +195,123 @@ export default function ResultScreen({
             </button>
           </div>
         )}
+
+        {/* Guestbook — public marginalia left on this plate. Shown on any
+            plate (own or another's). The author is pinged when a note is
+            inscribed (handled upstream). */}
+        {onSendNote && (
+          <Guestbook
+            notes={notes ?? []}
+            myUserId={myUserId}
+            canCompose={!!canCompose}
+            onSend={onSendNote}
+          />
+        )}
       </div>
     </Ticket>
+  );
+}
+
+// In-game guestbook section: a thread of marginalia + a compose box.
+// Each note row is avatar + name (tappable → author's Aigram profile,
+// self shows "you") + text + relative time. Inside a scrollable detail,
+// so rows use onClick (scroll-vs-click); the send button is an action.
+function Guestbook({
+  notes, myUserId, canCompose, onSend,
+}: {
+  notes: GuestMessage[];
+  myUserId?: string;
+  canCompose: boolean;
+  onSend: (text: string) => void;
+}) {
+  const [draft, setDraft] = useState('');
+  const trimmed = draft.trim();
+  const submit = () => {
+    if (!trimmed) return;
+    playPop(); hapticTap();
+    onSend(trimmed);
+    setDraft('');
+  };
+  return (
+    <section className="pf-notes" aria-label={t('notes_heading')}>
+      <h2 className="pf-notes__heading">{t('notes_heading')}</h2>
+      <p className="pf-notes__sub"><em>{t('notes_sub')}</em></p>
+
+      {notes.length === 0 ? (
+        <p className="pf-notes__empty"><em>{t('notes_empty')}</em></p>
+      ) : (
+        <ul className="pf-notes__list">
+          {notes.map((m) => {
+            const isSelf = !!myUserId && m.fromUserId === myUserId;
+            const name = isSelf
+              ? t('note_you')
+              : (m.userName || (m.fromUserId ? `user ${m.fromUserId.slice(0, 6)}` : ''));
+            return (
+              <li key={m.id} className="pf-note">
+                <button
+                  type="button"
+                  className={`pf-note__who ${isSelf ? 'is-self' : ''}`}
+                  onClick={(ev) => {
+                    ev.stopPropagation();
+                    if (!isSelf && isInAigram && m.fromUserId) openAigramProfile(m.fromUserId);
+                  }}
+                  disabled={isSelf || !isInAigram || !m.fromUserId}
+                  aria-label={isSelf ? undefined : `Open ${name || 'naturalist'}'s profile`}
+                >
+                  {isSelf ? (
+                    <span className="pf-note__avatar pf-note__avatar--self" aria-hidden>
+                      <span className="pf-note__letter">{t('note_you')[0]?.toUpperCase()}</span>
+                    </span>
+                  ) : m.userAvatarUrl ? (
+                    <span className="pf-note__avatar" aria-hidden>
+                      <img src={m.userAvatarUrl} alt="" draggable={false} referrerPolicy="no-referrer" />
+                    </span>
+                  ) : (
+                    <span className="pf-note__avatar" aria-hidden>
+                      <span className="pf-note__letter">{(name || '?')[0]?.toUpperCase()}</span>
+                    </span>
+                  )}
+                  <span className={`pf-note__name ${isSelf ? 'is-self' : ''}`}>{name}</span>
+                </button>
+                <span className="pf-note__text">{m.text}</span>
+                <span className="pf-note__time"><em>{timeAgo(m.ts, tLocale)}</em></span>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+
+      {canCompose ? (
+        <div className="pf-notes__compose">
+          <input
+            className="pf-notes__input"
+            type="text"
+            value={draft}
+            maxLength={MAX_LEN}
+            placeholder={t('note_placeholder')}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') submit(); }}
+            aria-label={t('note_placeholder')}
+          />
+          <button
+            type="button"
+            className="pf-notes__send"
+            onPointerDown={submit}
+            disabled={!trimmed}
+            aria-label={t('note_send')}
+          >
+            <svg viewBox="0 0 16 16" width="13" height="13" fill="none"
+                 stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"
+                 strokeLinejoin="round" aria-hidden>
+              <path d="M2 8 L13 3 L9 13 L7.5 9 Z" />
+            </svg>
+            <span>{t('note_send')}</span>
+          </button>
+        </div>
+      ) : (
+        <p className="pf-notes__hint"><em>{t('note_signed_in_only')}</em></p>
+      )}
+    </section>
   );
 }
 

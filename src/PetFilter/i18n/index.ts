@@ -117,6 +117,13 @@ const STRINGS = {
     err_gen_failed: 'The engraver was unable to finish. Try another order.',
     hint_tap_play: 'tap to begin',
     scroll_more: 'more below',
+    notes_heading: 'Marginalia',
+    notes_sub: 'Notes inscribed in the margin by other naturalists.',
+    notes_empty: 'No notes yet. Be the first to inscribe one.',
+    note_placeholder: 'Leave a note in the margin…',
+    note_send: 'Inscribe',
+    note_you: 'you',
+    note_signed_in_only: 'Open in the app to leave a note.',
   },
   zh: {
     brand: 'ALTERU',
@@ -209,6 +216,13 @@ const STRINGS = {
     err_gen_failed: '雕版师未能完成，换一物种再试。',
     hint_tap_play: '轻触开始',
     scroll_more: '向下还有',
+    notes_heading: '旁注',
+    notes_sub: '其他博物学家在页边留下的批注。',
+    notes_empty: '还没有批注。来写下第一条。',
+    note_placeholder: '在页边留一句…',
+    note_send: '题写',
+    note_you: '你',
+    note_signed_in_only: '在 App 中打开即可留言。',
   },
   // 日本語 — 明治期博物学風の語り。「主体」「標本」「学会」等の漢語。
   ja: {
@@ -302,6 +316,13 @@ const STRINGS = {
     err_gen_failed: '彫版師は完了できず。他の目をお試しを。',
     hint_tap_play: '触れて始む',
     scroll_more: '下に続く',
+    notes_heading: '傍注',
+    notes_sub: '他の博物学者が余白に記した覚書。',
+    notes_empty: 'まだ覚書なし。最初の一筆を記されよ。',
+    note_placeholder: '余白に一言記す…',
+    note_send: '記す',
+    note_you: 'あなた',
+    note_signed_in_only: 'アプリで開いて覚書を残す。',
   },
   // 한국어 — 19세기 박물학회 어조. 한자어 위주의 격식체.
   ko: {
@@ -395,6 +416,13 @@ const STRINGS = {
     err_gen_failed: '판각사가 완료하지 못했다. 다른 목을 시도하시라.',
     hint_tap_play: '눌러 시작',
     scroll_more: '아래에 더',
+    notes_heading: '방주',
+    notes_sub: '다른 박물학자들이 여백에 남긴 메모.',
+    notes_empty: '아직 메모 없음. 첫 메모를 남기시라.',
+    note_placeholder: '여백에 한마디 남기다…',
+    note_send: '적다',
+    note_you: '당신',
+    note_signed_in_only: '앱에서 열어 메모를 남기시라.',
   },
   // Español — registro literario decimonónico. Tono de naturalista
   // formal, "sociedad" y "ejemplar" como términos académicos.
@@ -489,12 +517,23 @@ const STRINGS = {
     err_gen_failed: 'El grabador no pudo concluir. Pruebe con otra orden.',
     hint_tap_play: 'toque para comenzar',
     scroll_more: 'más abajo',
+    notes_heading: 'Marginalia',
+    notes_sub: 'Notas inscritas al margen por otros naturalistas.',
+    notes_empty: 'Aún no hay notas. Sea el primero en inscribir una.',
+    note_placeholder: 'Deje una nota al margen…',
+    note_send: 'Inscribir',
+    note_you: 'usted',
+    note_signed_in_only: 'Abra en la app para dejar una nota.',
   },
 } as const satisfies Record<Locale, Record<string, string>>;
 
 type StringKey = keyof typeof STRINGS['en'];
 
 const locale = detectLocale();
+
+/** Active locale code — for helpers like guestbook's timeAgo that take a
+ *  lang string (it maps en/zh/es/pt, falls back to en for ja/ko). */
+export const tLocale: Locale = locale;
 
 export function t(key: StringKey): string {
   const dict = STRINGS[locale] as Record<string, string>;

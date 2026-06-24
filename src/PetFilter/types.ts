@@ -1,4 +1,5 @@
 import type { Pet } from './utils/pets';
+import type { GuestMessage } from '@shared/social/guestbook';
 
 export type Phase = 'frontispiece' | 'picker' | 'processing' | 'result' | 'wall' | 'bestiary';
 
@@ -26,6 +27,11 @@ export interface PetSave {
   shots: PetShot[];
   /** Album-Cover-Gen style reactions map: shotId → kinds. */
   reactions?: Record<string, ReactionKind[]>;
+  /** In-game guestbook — public text notes left on plates (the artifact
+   *  is a PetShot, keyed by shot.id). Lives in the SENDER's own blob;
+   *  cross-user display is best-effort, the author is pinged via notify.
+   *  See @shared/social/guestbook. */
+  messages?: GuestMessage[];
 }
 
 export type ReactionKind = 'heart' | 'fire' | 'mind' | 'eye';

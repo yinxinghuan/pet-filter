@@ -12,6 +12,12 @@ import { useWall } from './hooks/useWall';
 import { t } from './i18n';
 import { playClick, playReveal, unlockAudio } from './utils/audio';
 import { PETS } from './utils/pets';
+import {
+  appendMessage,
+  guestbookNotifyConfig,
+  newMessage,
+  threadFor,
+} from '@shared/social/guestbook';
 import type { Phase, PetSave, PetShot, ReactionKind } from './types';
 import './PetFilter.less';
 
@@ -212,9 +218,51 @@ export default function PetFilter() {
     const nextSave: PetSave = {
       shots: mirror?.shots ?? [],
       reactions,
+      messages: mirror?.messages,
     };
     setMirror(nextSave);
     persist(nextSave);
+  };
+
+  // ─── Guestbook (留言) ──────────────────────────────────────────────
+  // Public text notes left on a plate (the artifact = PetShot, keyed by
+  // shot.id). Stored in our OWN blob (full RMW so it never clobbers
+  // shots/reactions), displayed best-effort across blobs via the wall,
+  // and the plate's author is pinged once per plate per session.
+  const noteNotified = useRef<Set<string>>(new Set());
+  const sendMessage = (
+    shot: PetShot,
+    author: { userId: string; userName?: string; userAvatarUrl?: string } | null | undefined,
+    text: string,
+  ) => {
+    const selfId = telegramId ? String(telegramId) : '';
+    const authorId = author?.userId;
+    // The artifact's author — undefined for self/anon (no notify target).
+    const toUserId = authorId && authorId !== 'self' ? authorId : undefined;
+    const msg = newMessage(shot.id, toUserId, text);
+    if (!msg) return;
+    playClick();
+    // Full read-modify-write through the mirror so the note rides
+    // alongside shots + reactions (partial-persist would wipe them).
+    const base: PetSave = mirror ?? { shots: [], reactions: {} };
+    const nextSave = appendMessage(base, msg);
+    setMirror(nextSave);
+    persist(nextSave);
+    // Ping the plate's author at most once per plate per session;
+    // skip self and unattributable (self/AI-fallback) targets.
+    if (toUserId && toUserId !== selfId && !noteNotified.current.has(shot.id)) {
+      noteNotified.current.add(shot.id);
+      events.trigger(
+        'petfilter_note',
+        guestbookNotifyConfig({
+          toUserId,
+          refUrl: shot.imageUrl,
+          note: text,
+          template: '{sender_name} left a note on your specimen',
+          imagePrompt: `${shot.petName ?? 'specimen'} field-guide plate, 19th-c. natural-history engraving`,
+        }),
+      );
+    }
   };
 
   // ─── Phase transitions ────────────────────────────────────────────
@@ -245,6 +293,7 @@ export default function PetFilter() {
       const nextSave: PetSave = {
         shots: [shot, ...(mirror?.shots ?? [])].slice(0, 24),
         reactions: mirror?.reactions ?? {},
+        messages: mirror?.messages,
       };
       setMirror(nextSave);
       persist(nextSave);
@@ -283,6 +332,7 @@ export default function PetFilter() {
       const nextSave: PetSave = {
         shots: [shot, ...(mirror?.shots ?? [])].slice(0, 24),
         reactions: mirror?.reactions ?? {},
+        messages: mirror?.messages,
       };
       setMirror(nextSave);
       persist(nextSave);
@@ -351,6 +401,7 @@ export default function PetFilter() {
     const nextSave: PetSave = {
       shots: (mirror?.shots ?? []).filter((s) => s.id !== shotId),
       reactions: mirror?.reactions ?? {},
+      messages: mirror?.messages,
     };
     setMirror(nextSave);
     persist(nextSave);
@@ -424,6 +475,18 @@ export default function PetFilter() {
           // A plate is "mine" if its id appears in our local discography.
           const mineIds = new Set((mirror?.shots ?? []).map((s) => s.id));
           const isMine = mineIds.has(current.id);
+          const myUid = telegramId ? String(telegramId) : undefined;
+          // Best-effort wall notes ∪ my own outgoing notes for this plate.
+          const thread = threadFor(
+            current.id,
+            wall.messagesByTarget,
+            mirror?.messages,
+            myUid,
+          );
+          // Author to attribute a note to: the wall author when we came
+          // from the wall, else (own freshly-minted plate) ourselves.
+          const noteAuthor = currentAuthor
+            ?? (isMine && myUid ? { userId: myUid } : null);
           return (
             <ResultScreen
               shot={current}
@@ -439,6 +502,10 @@ export default function PetFilter() {
               petitionCount={petitionCount}
               petitionMax={MAX_PETITIONS}
               onDelete={isMine ? handleDeleteCurrent : undefined}
+              notes={thread}
+              myUserId={myUid}
+              canCompose={isInAigram}
+              onSendNote={(text) => sendMessage(current, noteAuthor, text)}
             />
           );
         })()}

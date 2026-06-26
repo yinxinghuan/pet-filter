@@ -2094,6 +2094,12 @@
   font-style: italic;
   color: @ink-fade;
 }
+.pf-wall-tile__by {
+  // long-username truncation: keep the "by {name}" footer to one line
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
 // When viewing the frontispiece, the footer 『archive』 link is a
 // secondary path — soften it so the central CTA dominates.
@@ -2518,6 +2524,7 @@ body {
   gap: 6px;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
+  min-width: 0; // long-username truncation: let grid track + name shrink
   &[disabled] { cursor: default; }
 }
 .pf-note__avatar {
@@ -2546,6 +2553,9 @@ body {
   font-weight: 600;
   color: @ink;
   white-space: nowrap;
+  min-width: 0; // long-username truncation
+  overflow: hidden;
+  text-overflow: ellipsis;
   &.is-self { color: @seal; font-style: italic; }
 }
 .pf-note__text {

@@ -8,6 +8,8 @@ import { playPop, hapticTap } from '../utils/audio';
 import { openAigramProfile, isInAigram } from '@shared/runtime/bridge';
 import { MAX_LEN, timeAgo, type GuestMessage } from '@shared/social/guestbook';
 
+const ALTERU_APP_URL = 'https://apps.apple.com/app/id6769646546';
+
 interface Props {
   shot: PetShot;
   cameFromWall: boolean;
@@ -309,7 +311,12 @@ function Guestbook({
           </button>
         </div>
       ) : (
-        <p className="pf-notes__hint"><em>{t('note_signed_in_only')}</em></p>
+        <p className="pf-notes__hint pf-notes__download">
+          <em>{t('note_signed_in_only')}</em>
+          <a href={ALTERU_APP_URL} target="_blank" rel="noopener noreferrer">
+            {t('download_alteru')}
+          </a>
+        </p>
       )}
     </section>
   );

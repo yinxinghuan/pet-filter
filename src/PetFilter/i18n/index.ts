@@ -123,7 +123,8 @@ const STRINGS = {
     note_placeholder: 'Leave a note in the margin…',
     note_send: 'Inscribe',
     note_you: 'you',
-    note_signed_in_only: 'Open in the app to leave a note.',
+    note_signed_in_only: 'Open in AlterU to leave a note.',
+    download_alteru: 'Get AlterU on the App Store',
   },
   zh: {
     brand: 'ALTERU',
@@ -222,7 +223,8 @@ const STRINGS = {
     note_placeholder: '在页边留一句…',
     note_send: '题写',
     note_you: '你',
-    note_signed_in_only: '在 App 中打开即可留言。',
+    note_signed_in_only: '在 AlterU 中打开即可留言。',
+    download_alteru: '下载 AlterU',
   },
   // 日本語 — 明治期博物学風の語り。「主体」「標本」「学会」等の漢語。
   ja: {
@@ -322,7 +324,8 @@ const STRINGS = {
     note_placeholder: '余白に一言記す…',
     note_send: '記す',
     note_you: 'あなた',
-    note_signed_in_only: 'アプリで開いて覚書を残す。',
+    note_signed_in_only: 'AlterUで開いて覚書を残す。',
+    download_alteru: 'AlterUをApp Storeで入手',
   },
   // 한국어 — 19세기 박물학회 어조. 한자어 위주의 격식체.
   ko: {
@@ -422,7 +425,8 @@ const STRINGS = {
     note_placeholder: '여백에 한마디 남기다…',
     note_send: '적다',
     note_you: '당신',
-    note_signed_in_only: '앱에서 열어 메모를 남기시라.',
+    note_signed_in_only: 'AlterU에서 열어 메모를 남기시라.',
+    download_alteru: 'App Store에서 AlterU 받기',
   },
   // Español — registro literario decimonónico. Tono de naturalista
   // formal, "sociedad" y "ejemplar" como términos académicos.
@@ -523,7 +527,8 @@ const STRINGS = {
     note_placeholder: 'Deje una nota al margen…',
     note_send: 'Inscribir',
     note_you: 'usted',
-    note_signed_in_only: 'Abra en la app para dejar una nota.',
+    note_signed_in_only: 'Abre en AlterU para dejar una nota.',
+    download_alteru: 'Obtén AlterU en App Store',
   },
 } as const satisfies Record<Locale, Record<string, string>>;
 

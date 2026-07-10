@@ -67,13 +67,14 @@ function parseArgs(argv) {
 function usage(code) {
   const message = [
     'Usage:',
+    '  npm run gen:species-assets -- --generate --activate',
+    '  npm run gen:species-assets -- --activate',
     '  npm run gen:species-assets -- --pack src/PetFilter/cartridge/gen-...Species.json',
     '  npm run gen:species-assets -- --pack src/PetFilter/cartridge/gen-...Species.json --generate',
-    '  npm run gen:species-assets -- --generate --activate',
     '',
     'Options:',
     '  --generate       Actually call the gen-image API. Default is dry-run.',
-    '  --activate       Activate only after every required cover/demo asset exists.',
+    '  --activate       Activate generated.ts only after every required cover/demo asset exists.',
     '  --force          Regenerate files that already exist.',
     '  --covers-only    Generate only cover_<id>.jpg files.',
     '  --demos-only     Generate only frontispiece demo files.',

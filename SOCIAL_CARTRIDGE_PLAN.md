@@ -62,8 +62,8 @@ Wired into:
 - `components/ResultScreen.tsx`: author attribution and judgment signature copy
   now resolve through i18n/cartridge copy instead of hard-coded English.
 - `scripts/gen-species-pack.mjs`: one-sentence species-pack authoring helper.
-  It can preview JSON or write a draft `gen-*Species.ts` file, and it lists
-  required cover/demo assets before activation.
+  It can preview JSON or write stable `generatedSpecies.ts/json` files, and it
+  lists required cover/demo assets before activation.
 - `src/PetFilter/cartridge/gen-botanical-moon-garden-transformationSpecies.ts`:
   generated authoring proof for "moon garden animal transformation". It is not
   wired into the live cartridge because matching cover/demo assets still need
@@ -94,8 +94,8 @@ Move these into cartridge fields next:
 ```bash
 npm run gen:species -- --sentence "moon garden animal transformation" --json
 npm run gen:species -- --sentence "moon garden animal transformation" --write
-npm run gen:species-assets -- --pack src/PetFilter/cartridge/gen-botanical-moon-garden-transformationSpecies.json
-npm run gen:species-assets -- --pack src/PetFilter/cartridge/gen-botanical-moon-garden-transformationSpecies.json --generate
+npm run gen:species-assets -- --generate --activate
+npm run build
 ```
 
 Supported rule families today:
@@ -107,10 +107,10 @@ Supported rule families today:
 - `urban`
 - `companion`
 
-The generated file exports a `create...SpeciesPack(imagePrompt)` function and a
+The generated file exports `createGeneratedSpeciesPack(imagePrompt)` and a
 `generatedSpeciesPackMeta` block with `coverAssetsRequired` and
-`demoPortraitsSuggested`. Do not activate a generated pack until those image
-assets exist.
+`demoPortraitsSuggested`. The asset helper refuses activation until all 12
+cover and 3 demo assets exist, then writes the active `generated.ts` cartridge.
 
 The asset helper plans these files by default:
 
@@ -166,7 +166,7 @@ Implementation notes:
 ## QA
 
 - `npm run build`
-- `npm run gen:species-assets -- --pack src/PetFilter/cartridge/gen-botanical-moon-garden-transformationSpecies.json --generate`
+- `npm run gen:species-assets -- --generate --activate`
 - Playwright screenshot QA for desktop/mobile:
   - frontispiece, picker, bestiary, processing, result, wall
   - no broken images

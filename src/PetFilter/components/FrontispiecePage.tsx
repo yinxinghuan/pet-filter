@@ -10,6 +10,7 @@ import { petById, PETS } from '../utils/pets';
 import { playClick } from '../utils/audio';
 import { WaxSeal } from './FrontispieceArt';
 import type { PetShot, WallEntry } from '../types';
+import { PET_FILTER_CARTRIDGE } from '../cartridge';
 
 interface Props {
   entries: WallEntry[];
@@ -20,28 +21,24 @@ interface Props {
   onView: (shot: PetShot, author?: { userId: string; userName?: string; userAvatarUrl?: string }) => void;
 }
 
-const ROTATE_MS = 6500;
-
-// Curated demo portraits used when no real community data exists yet.
-// These are pre-generated img2img outputs (see gen_demo_portraits.py).
-const DEMO_PORTRAITS = [
-  { src: (new URL(import.meta.env.BASE_URL + 'demo_pet_cat.jpg', location.href).href),       petId: 'cat' },
-  { src: (new URL(import.meta.env.BASE_URL + 'demo_pet_capybara.jpg', location.href).href),  petId: 'capybara' },
-  { src: (new URL(import.meta.env.BASE_URL + 'demo_pet_octopus.jpg', location.href).href),   petId: 'octopus' },
-];
+const FRONTISPIECE = PET_FILTER_CARTRIDGE.frontispiece;
 
 export default function FrontispiecePage({
   entries, myShots, loaded, onOpen, onArchive, onView,
 }: Props) {
   const pool: WallEntry[] = useMemo(() => {
-    const owns: WallEntry[] = myShots.map((s) => ({ userId: 'self', userName: 'You', shot: s }));
+    const owns: WallEntry[] = myShots.map((s) => ({
+      userId: 'self',
+      userName: FRONTISPIECE.selfAuthorName,
+      shot: s,
+    }));
     return [...owns, ...entries];
   }, [entries, myShots]);
 
   const [idx, setIdx] = useState(0);
   useEffect(() => {
     if (pool.length <= 1) return;
-    const id = setInterval(() => setIdx((i) => (i + 1) % pool.length), ROTATE_MS);
+    const id = setInterval(() => setIdx((i) => (i + 1) % pool.length), FRONTISPIECE.liveRotationMs);
     return () => clearInterval(id);
   }, [pool.length]);
 
@@ -96,10 +93,14 @@ export default function FrontispiecePage({
 function FrontDemo({ onOpen }: { onOpen: () => void }) {
   const [i, setI] = useState(0);
   useEffect(() => {
-    const id = setInterval(() => setI((n) => (n + 1) % DEMO_PORTRAITS.length), 3200);
+    const id = setInterval(
+      () => setI((n) => (n + 1) % FRONTISPIECE.demoPortraits.length),
+      FRONTISPIECE.demoRotationMs,
+    );
     return () => clearInterval(id);
   }, []);
-  const demo = DEMO_PORTRAITS[i];
+  const demo = FRONTISPIECE.demoPortraits[i];
+  const demoSrc = new URL(import.meta.env.BASE_URL + demo.asset, location.href).href;
   const pet = PETS.find((p) => p.id === demo.petId);
   return (
     <button type="button"
@@ -109,8 +110,8 @@ function FrontDemo({ onOpen }: { onOpen: () => void }) {
             aria-label={t('front_cta_open')}>
       <div className="pf-front__portrait-circle">
         <img className="pf-front__portrait-img"
-             key={demo.src}
-             src={demo.src}
+             key={demoSrc}
+             src={demoSrc}
              alt={pet?.name}
              draggable={false}
              onError={(e) => {
@@ -133,7 +134,7 @@ function FrontDemo({ onOpen }: { onOpen: () => void }) {
 
 function FrontHero({ entry, onView }: { entry: WallEntry; onView: Props['onView'] }) {
   const pet = petById(entry.shot.petId);
-  const credit = entry.userName ? entry.userName : 'anonymous';
+  const credit = entry.userName ? entry.userName : FRONTISPIECE.liveAuthorFallback;
   return (
     <button type="button"
             className="pf-front__portrait pf-front__portrait--live"

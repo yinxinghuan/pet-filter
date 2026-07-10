@@ -4,6 +4,7 @@ import { t } from '../i18n';
 import type { Stage } from '../hooks/usePetGen';
 import { petById, PETS } from '../utils/pets';
 import { CaliperFrame } from './ProcessingInstruments';
+import { PET_FILTER_CARTRIDGE } from '../cartridge';
 
 interface Props {
   stage: Stage;
@@ -31,7 +32,10 @@ export default function ProcessingScreen({
   // and answers 『what could I become?』 in the most engaging moment.
   const [considerIdx, setConsiderIdx] = useState(0);
   useEffect(() => {
-    const id = setInterval(() => setConsiderIdx((i) => (i + 1) % PETS.length), 3200);
+    const id = setInterval(
+      () => setConsiderIdx((i) => (i + 1) % PETS.length),
+      PET_FILTER_CARTRIDGE.processing.considerationRotationMs,
+    );
     return () => clearInterval(id);
   }, []);
   const considered = PETS[considerIdx];
@@ -99,8 +103,8 @@ export default function ProcessingScreen({
                style={{ width: `${stage99 * 100}%` }} />
         </div>
         <div className="pf-proc__elapsed">
-          <span><em>elapsed</em> {String(elapsedS).padStart(2, '0')}<span className="pf-proc__sep">″</span></span>
-          <span><em>est. total</em> ~{Math.round(estimatedTotalMs / 1000)}<span className="pf-proc__sep">″</span></span>
+          <span><em>{t('proc_elapsed')}</em> {String(elapsedS).padStart(2, '0')}<span className="pf-proc__sep">″</span></span>
+          <span><em>{t('proc_est_total')}</em> ~{Math.round(estimatedTotalMs / 1000)}<span className="pf-proc__sep">″</span></span>
         </div>
 
         <div className="pf-proc__fineprint"><em>{t('proc_fineprint')}</em></div>

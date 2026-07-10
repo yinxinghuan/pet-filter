@@ -1,18 +1,23 @@
 // Lightweight i18n. Tone: 19th-c. natural-history field journal —
 // understated, italic Latin, no shouting capitals. 5 locales.
 
-type Locale = 'en' | 'zh' | 'ja' | 'ko' | 'es';
+import { PET_FILTER_CARTRIDGE } from '../cartridge';
+import type { PetFilterLocale } from '../cartridge/types';
+
+export type Locale = PetFilterLocale;
+
+const LOCALES: Locale[] = ['en', 'zh', 'ja', 'ko', 'es'];
 
 function detectLocale(): Locale {
   // ?locale=... — highest priority, useful for design QA + screenshots.
   if (typeof window !== 'undefined') {
     const q = new URLSearchParams(window.location.search).get('locale');
-    if (q && (['en','zh','ja','ko','es'] as Locale[]).includes(q as Locale)) return q as Locale;
+    if (q && LOCALES.includes(q as Locale)) return q as Locale;
   }
   const override = typeof localStorage !== 'undefined'
     ? localStorage.getItem('game_locale')
     : null;
-  if (override && (['en','zh','ja','ko','es'] as Locale[]).includes(override as Locale)) {
+  if (override && LOCALES.includes(override as Locale)) {
     return override as Locale;
   }
   if (typeof navigator !== 'undefined') {
@@ -101,8 +106,12 @@ const STRINGS = {
     proc_fineprint: 'Do not refresh — engraving in progress.',
     proc_cancel: 'Abandon the engraving',
     proc_considering: '— The Society considers —',
+    proc_elapsed: 'elapsed',
+    proc_est_total: 'est. total',
     result_subhead: 'The Society has determined this subject to be a',
     result_below_image: 'engraved for the Society archive',
+    result_author_by: 'a plate by',
+    result_judgment_signature: 'the Society',
     wall_heading: 'The Society Archive',
     wall_sub: 'Specimens recently catalogued by other naturalists.',
     wall_empty: 'No entries yet. The archive awaits its first plate.',
@@ -124,7 +133,7 @@ const STRINGS = {
     note_send: 'Inscribe',
     note_you: 'you',
     note_signed_in_only: 'Open in AlterU to leave a note.',
-    download_alteru: 'Get AlterU on the App Store',
+    download_alteru: 'Get AlterU',
   },
   zh: {
     brand: 'ALTERU',
@@ -201,8 +210,12 @@ const STRINGS = {
     proc_fineprint: '请勿刷新 — 雕版进行中。',
     proc_cancel: '中止雕版',
     proc_considering: '— 学会逐一考虑 —',
+    proc_elapsed: '已用时',
+    proc_est_total: '预计总时长',
     result_subhead: '学会判定此对象属于',
     result_below_image: '入档于学会档案',
+    result_author_by: '图版作者',
+    result_judgment_signature: '学会',
     wall_heading: '学会档案',
     wall_sub: '其他博物学家近期收录的标本。',
     wall_empty: '还没有人收录。等你来做第一页。',
@@ -302,8 +315,12 @@ const STRINGS = {
     proc_fineprint: '更新されたし — 彫版進行中。',
     proc_cancel: '彫版を中止',
     proc_considering: '— 學會が逐一考慮中 —',
+    proc_elapsed: '経過',
+    proc_est_total: '予定',
     result_subhead: '學會は本対象を次の目に属すと判定した',
     result_below_image: '學會記録のために彫版した',
+    result_author_by: '図版',
+    result_judgment_signature: '學會',
     wall_heading: '學會記録室',
     wall_sub: '他の博物学者が近頃登録した標本。',
     wall_empty: 'まだ登録なし。最初の図版を待つ。',
@@ -325,7 +342,7 @@ const STRINGS = {
     note_send: '記す',
     note_you: 'あなた',
     note_signed_in_only: 'AlterUで開いて覚書を残す。',
-    download_alteru: 'AlterUをApp Storeで入手',
+    download_alteru: 'AlterUを入手',
   },
   // 한국어 — 19세기 박물학회 어조. 한자어 위주의 격식체.
   ko: {
@@ -403,8 +420,12 @@ const STRINGS = {
     proc_fineprint: '새로고침 마라 — 판각 진행 중.',
     proc_cancel: '판각을 중지',
     proc_considering: '— 학회가 차례로 고려 중 —',
+    proc_elapsed: '경과',
+    proc_est_total: '예상',
     result_subhead: '학회는 본 대상을 다음 목에 속한다 판정했다',
     result_below_image: '학회 기록을 위해 판각함',
+    result_author_by: '도판 작성',
+    result_judgment_signature: '학회',
     wall_heading: '학회 기록실',
     wall_sub: '다른 박물학자들이 근일 등록한 표본.',
     wall_empty: '아직 등록 없음. 첫 도판을 기다린다.',
@@ -426,7 +447,7 @@ const STRINGS = {
     note_send: '적다',
     note_you: '당신',
     note_signed_in_only: 'AlterU에서 열어 메모를 남기시라.',
-    download_alteru: 'App Store에서 AlterU 받기',
+    download_alteru: 'AlterU 받기',
   },
   // Español — registro literario decimonónico. Tono de naturalista
   // formal, "sociedad" y "ejemplar" como términos académicos.
@@ -505,8 +526,12 @@ const STRINGS = {
     proc_fineprint: 'No actualice — grabado en curso.',
     proc_cancel: 'Abandonar el grabado',
     proc_considering: '— La Sociedad considera —',
+    proc_elapsed: 'transcurrido',
+    proc_est_total: 'total estimado',
     result_subhead: 'La Sociedad ha determinado que este sujeto pertenece a',
     result_below_image: 'grabado para el archivo de la Sociedad',
+    result_author_by: 'lámina por',
+    result_judgment_signature: 'la Sociedad',
     wall_heading: 'El Archivo de la Sociedad',
     wall_sub: 'Ejemplares catalogados recientemente por otros naturalistas.',
     wall_empty: 'Aún no hay entradas. El archivo aguarda su primera lámina.',
@@ -528,7 +553,7 @@ const STRINGS = {
     note_send: 'Inscribir',
     note_you: 'usted',
     note_signed_in_only: 'Abre en AlterU para dejar una nota.',
-    download_alteru: 'Obtén AlterU en App Store',
+    download_alteru: 'Obtén AlterU',
   },
 } as const satisfies Record<Locale, Record<string, string>>;
 
@@ -540,7 +565,14 @@ const locale = detectLocale();
  *  lang string (it maps en/zh/es/pt, falls back to en for ja/ko). */
 export const tLocale: Locale = locale;
 
+function cartridgeString(key: StringKey): string | undefined {
+  const copy = PET_FILTER_CARTRIDGE.copy.overrides;
+  return copy[locale]?.[key] ?? copy.en?.[key];
+}
+
 export function t(key: StringKey): string {
+  const cartridgeCopy = cartridgeString(key);
+  if (cartridgeCopy) return cartridgeCopy;
   const dict = STRINGS[locale] as Record<string, string>;
   return dict[key] ?? STRINGS.en[key] ?? key;
 }

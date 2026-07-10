@@ -12,6 +12,7 @@ import { useWall } from './hooks/useWall';
 import { t } from './i18n';
 import { playClick, playReveal, unlockAudio } from './utils/audio';
 import { PETS } from './utils/pets';
+import { PET_FILTER_CARTRIDGE } from './cartridge';
 import {
   appendMessage,
   guestbookNotifyConfig,
@@ -26,8 +27,27 @@ type Source =
   | { kind: 'url'; url: string }
   | null;
 
+function demoAssetForPet(petId: string): string {
+  const demo = PET_FILTER_CARTRIDGE.frontispiece.demoPortraits.find((item) => item.petId === petId);
+  return demo?.asset ?? `cover_${petId}.jpg`;
+}
+
+function makeDemoShot(index: number, id: string, createdAt: number): PetShot {
+  const pet = PETS[index % PETS.length] ?? PETS[0];
+  const asset = demoAssetForPet(pet.id);
+  return {
+    id,
+    petId: pet.id,
+    petName: pet.name,
+    imageUrl: (new URL(import.meta.env.BASE_URL + asset, location.href).href),
+    selfieUrl: (new URL(import.meta.env.BASE_URL + asset, location.href).href),
+    judgment: `${pet.character}`,
+    createdAt,
+  };
+}
+
 export default function PetFilter() {
-  const { savedData, persist } = useGameSave<PetSave>('pet-filter');
+  const { savedData, persist } = useGameSave<PetSave>(PET_FILTER_CARTRIDGE.gameId);
   const petGen = usePetGen();
   const wall = useWall();
 
@@ -78,20 +98,12 @@ export default function PetFilter() {
     if (typeof window === 'undefined') return;
     const demo = new URLSearchParams(window.location.search).get('demo');
     if (!demo) return;
-    const fakeShot: PetShot = {
-      id: 'demo-cap',
-      petId: 'capybara',
-      petName: 'Capybara',
-      imageUrl: (new URL(import.meta.env.BASE_URL + 'demo_pet_capybara.jpg', location.href).href),
-      selfieUrl: (new URL(import.meta.env.BASE_URL + 'demo_pet_cat.jpg', location.href).href),
-      judgment: 'The patient bearing and slow, considering gaze of the subject mark this specimen plainly under the order Capybara.',
-      createdAt: Date.now(),
-    };
+    const fakeShot = makeDemoShot(0, 'demo-primary', Date.now());
     if (demo === 'frontispiece') setPhase('frontispiece');
     else if (demo === 'picker') setPhase('picker');
     else if (demo === 'bestiary') setPhase('bestiary');
     else if (demo === 'processing') {
-      setPendingPet('octopus');
+      setPendingPet(PETS[0]?.id ?? fakeShot.petId);
       setPhase('processing');
     } else if (demo === 'result') {
       setCurrent(fakeShot);
@@ -115,14 +127,17 @@ export default function PetFilter() {
   const demoWallEntries = useMemo<typeof wall.entries>(() => {
     if (demoMode !== 'wall') return [];
     const now = Date.now();
-    return [
-      { userId: '1001', userName: 'jenny', shot: { id: 'd-a', petId: 'octopus', petName: 'Common Octopus', imageUrl: (new URL(import.meta.env.BASE_URL + 'demo_pet_octopus.jpg', location.href).href), selfieUrl: '', createdAt: now - 1000 * 60 * 32 } },
-      { userId: '1002', userName: 'algram', shot: { id: 'd-b', petId: 'capybara', petName: 'Capybara', imageUrl: (new URL(import.meta.env.BASE_URL + 'demo_pet_capybara.jpg', location.href).href), selfieUrl: '', createdAt: now - 1000 * 60 * 90 } },
-      { userId: '1003', userName: 'jm·f', shot: { id: 'd-c', petId: 'cat', petName: 'House Cat', imageUrl: (new URL(import.meta.env.BASE_URL + 'demo_pet_cat.jpg', location.href).href), selfieUrl: '', createdAt: now - 1000 * 60 * 60 * 3 } },
-      { userId: '1004', userName: 'isaya', shot: { id: 'd-d', petId: 'axolotl', petName: 'Axolotl', imageUrl: (new URL(import.meta.env.BASE_URL + 'cover_axolotl.jpg', location.href).href), selfieUrl: '', createdAt: now - 1000 * 60 * 60 * 5 } },
-      { userId: '1005', userName: 'ghostpixel', shot: { id: 'd-e', petId: 'parrot', petName: 'Scarlet Macaw', imageUrl: (new URL(import.meta.env.BASE_URL + 'cover_parrot.jpg', location.href).href), selfieUrl: '', createdAt: now - 1000 * 60 * 60 * 8 } },
-      { userId: '1006', userName: 'isabel', shot: { id: 'd-f', petId: 'hedgehog', petName: 'Hedgehog', imageUrl: (new URL(import.meta.env.BASE_URL + 'cover_hedgehog.jpg', location.href).href), selfieUrl: '', createdAt: now - 1000 * 60 * 60 * 22 } },
-    ];
+    const names = ['jenny', 'algram', 'jm·f', 'isaya', 'ghostpixel', 'isabel'];
+    return PETS.slice(0, 6).map((pet, index) => ({
+      userId: String(1001 + index),
+      userName: names[index] ?? PET_FILTER_CARTRIDGE.archive.authorFallback,
+      shot: {
+        ...makeDemoShot(index, `d-${index}`, now - 1000 * 60 * [32, 90, 180, 300, 480, 1320][index]),
+        petId: pet.id,
+        petName: pet.name,
+        imageUrl: (new URL(import.meta.env.BASE_URL + demoAssetForPet(pet.id), location.href).href),
+      },
+    }));
   }, [demoMode]);
 
   // First-touch audio unlock.
@@ -188,11 +203,7 @@ export default function PetFilter() {
     const authorId = currentAuthor?.userId;
     const selfId = telegramId || 'self';
     const isOther = !!authorId && authorId !== 'self' && authorId !== selfId;
-    const reactTmpl =
-      kind === 'heart' ? '{sender_name} loved your specimen.' :
-      kind === 'fire'  ? '{sender_name} was struck by your specimen.' :
-      kind === 'mind'  ? '{sender_name} marvelled at your specimen.' :
-                         '{sender_name} kept an eye on your specimen.';
+    const reactTmpl = PET_FILTER_CARTRIDGE.social.reactionNotifyTemplates[kind];
     const config = (isOther && shot && shot.imageUrl)
       ? {
           actions: [
@@ -201,7 +212,7 @@ export default function PetFilter() {
               target_user_id: authorId!,
               image: {
                 ref_url: shot.imageUrl,
-                prompt: `${shot.petName ?? 'specimen'} field-guide plate, 19th-c. natural-history engraving`,
+                prompt: `${shot.petName ?? 'specimen'} ${PET_FILTER_CARTRIDGE.social.reactionImagePromptSuffix}`,
               },
               message: { template: reactTmpl, variables: ['sender_name'] },
             },

@@ -8,6 +8,7 @@ import { useLongPress } from '../hooks/useLongPress';
 import { playPop, hapticTap } from '../utils/audio';
 import ReactionIcon from './ReactionIcons';
 import { petById } from '../utils/pets';
+import { PET_FILTER_CARTRIDGE } from '../cartridge';
 import type { WallDiagnostics } from '../hooks/useWall';
 import type { PetShot, ReactionKind, WallEntry } from '../types';
 
@@ -145,18 +146,18 @@ export default function Wall({
 
       {/* Stats banner — three cells separated by hairline rules,
           like the masthead of a Victorian periodical. */}
-      <div className="pf-wall-stats" aria-label="archive statistics">
+      <div className="pf-wall-stats" aria-label={ARCHIVE_COPY.statsAriaLabel}>
         <div className="pf-wall-stats__cell">
           <span className="pf-wall-stats__n">{String(total).padStart(2, '0')}</span>
-          <span className="pf-wall-stats__l"><em>on file</em></span>
+          <span className="pf-wall-stats__l"><em>{ARCHIVE_COPY.statsLabels.onFile}</em></span>
         </div>
         <div className="pf-wall-stats__cell">
           <span className="pf-wall-stats__n">{String(todayCount).padStart(2, '0')}</span>
-          <span className="pf-wall-stats__l"><em>today</em></span>
+          <span className="pf-wall-stats__l"><em>{ARCHIVE_COPY.statsLabels.today}</em></span>
         </div>
         <div className="pf-wall-stats__cell">
           <span className="pf-wall-stats__n">XX</span>
-          <span className="pf-wall-stats__l"><em>orders</em></span>
+          <span className="pf-wall-stats__l"><em>{ARCHIVE_COPY.statsLabels.orders}</em></span>
         </div>
       </div>
 
@@ -286,15 +287,17 @@ function ListView({ entries, reactionsOf, scope, onSelect, armedId, canDelete, o
   );
 }
 
+const ARCHIVE_COPY = PET_FILTER_CARTRIDGE.archive;
+
 function relativeTime(ts: number): string {
   const diff = Date.now() - ts;
-  if (diff < 60_000) return 'just now';
+  if (diff < 60_000) return ARCHIVE_COPY.relativeTime.justNow;
   const m = Math.floor(diff / 60_000);
-  if (m < 60) return `${m}m ago`;
+  if (m < 60) return `${m}${ARCHIVE_COPY.relativeTime.minuteAgoSuffix}`;
   const h = Math.floor(m / 60);
-  if (h < 24) return `${h}h ago`;
+  if (h < 24) return `${h}${ARCHIVE_COPY.relativeTime.hourAgoSuffix}`;
   const d = Math.floor(h / 24);
-  return `${d}d ago`;
+  return `${d}${ARCHIVE_COPY.relativeTime.dayAgoSuffix}`;
 }
 
 function WallRow({ entry, idx, scope, mine, onSelect, armed, canDelete, onArm, onConfirmDelete, onCancelArm }: {
@@ -339,13 +342,13 @@ function WallRow({ entry, idx, scope, mine, onSelect, armed, canDelete, onArm, o
         </div>
         <div className="pf-wall-row__info">
           <div className="pf-wall-row__topline">
-            <span className="pf-wall-row__plate">Pl. {String(idx).padStart(2, '0')}</span>
+            <span className="pf-wall-row__plate">{ARCHIVE_COPY.platePrefix} {String(idx).padStart(2, '0')}</span>
             <span className="pf-wall-row__pet">{shot.petName}</span>
           </div>
           <div className="pf-wall-row__latin"><em>{pet?.latin ?? ''}</em></div>
           <div className="pf-wall-row__byline">
             {entry.userId === 'self' ? (
-              <em>your specimen</em>
+              <em>{ARCHIVE_COPY.selfByline}</em>
             ) : (
               // Author chip — avatar + name in a tappable button that
               // opens the user's Aigram profile. cross-user-avatar +
@@ -358,9 +361,9 @@ function WallRow({ entry, idx, scope, mine, onSelect, armed, canDelete, onArm, o
                   if (isInAigram) openAigramProfile(entry.userId);
                 }}
                 disabled={!isInAigram}
-                aria-label={`Open ${entry.userName || 'collector'}'s profile`}
+                aria-label={`Open ${entry.userName || ARCHIVE_COPY.authorFallback}'s profile`}
               >
-                <em>collected by </em>
+                <em>{ARCHIVE_COPY.authorPrefix} </em>
                 {entry.userAvatarUrl ? (
                   <span className="pf-wall-row__author-avatar" aria-hidden>
                     <img src={entry.userAvatarUrl} alt="" draggable={false} referrerPolicy="no-referrer" />
@@ -460,9 +463,9 @@ function WallTile({ entry, mine, onSelect, scope, armed, canDelete, onArm, onCon
         <div className="pf-wall-tile__latin"><em>{pet?.latin ?? ''}</em></div>
         <div className="pf-wall-tile__by">
           {entry.userId === 'self' ? (
-            <em>yours</em>
+            <em>{ARCHIVE_COPY.tileSelfByline}</em>
           ) : (
-            <em>by {entry.userName || `user ${entry.userId.slice(0, 6)}`}</em>
+            <em>{ARCHIVE_COPY.tileAuthorPrefix} {entry.userName || `user ${entry.userId.slice(0, 6)}`}</em>
           )}
         </div>
 

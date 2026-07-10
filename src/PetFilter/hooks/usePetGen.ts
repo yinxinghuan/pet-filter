@@ -2,6 +2,7 @@ import { useCallback, useRef, useState } from 'react';
 import { useGenImage, useUpload } from '@shared/runtime';
 import { prepareSelfie } from '../utils/selfie';
 import { petById, PETS } from '../utils/pets';
+import { PET_FILTER_CARTRIDGE } from '../cartridge';
 import type { PetShot } from '../types';
 
 const CHAT_URL = 'https://chat.aiwaves.tech/aigram/api/game-chat';
@@ -29,43 +30,24 @@ async function chatOnce(system: string, user: string): Promise<string> {
   }
 }
 
+function buildClassificationCatalog(): string {
+  return PETS
+    .map((pet) => `- ${pet.id} (${pet.latin}) — ${pet.character}`)
+    .join('\n');
+}
+
+function buildSpeciesIdList(): string {
+  return PETS.map((pet) => pet.id).join(', ');
+}
+
 // LLM-matched classification — single chat returns BOTH the species
 // the Society picks AND the matching verdict sentence. Saves a
 // round-trip and guarantees the two are consistent with each other.
 const CLASSIFY_SYSTEM = (
-  'You are a 19th-century natural history society scholar examining ' +
-  'an unknown subject. Classify them under ONE of these twenty known ' +
-  'orders. Each order has character:\n\n' +
-  '- cat (Felis catus) — domestic, alert, gracefully detached\n' +
-  '- dog (Canis familiaris) — loyal, warm, easily moved\n' +
-  '- hamster (Mesocricetus auratus) — small, busy, cheerful, hoards\n' +
-  '- duck (Anas platyrhynchos) — calm, drifty, faintly comic\n' +
-  '- rabbit (Oryctolagus cuniculus) — cautious, quick to startle, curious\n' +
-  '- goldfish (Carassius auratus) — brief in memory, bright in being\n' +
-  '- capybara (Hydrochoerus hydrochaeris) — supremely relaxed, kind\n' +
-  '- sloth (Bradypus tridactylus) — slow, dreamy, mossy, benevolent\n' +
-  '- parrot (Ara macao) — vivid, conspicuous, intelligent, vocal\n' +
-  '- axolotl (Ambystoma mexicanum) — perpetually amused, otherworldly\n' +
-  '- hedgehog (Erinaceus europaeus) — cautious, quietly spiky\n' +
-  '- red_panda (Ailurus fulgens) — solitary and gentle, mountain dweller\n' +
-  '- fennec (Vulpes zerda) — small, alert, hearing knows far things\n' +
-  '- otter (Lutra lutra) — playful, dexterous, holds hands in current\n' +
-  '- clam (Tridacna gigas) — withdrawn, treasure inside, uncanny\n' +
-  '- octopus (Octopus vulgaris) — improvisational, alien, watchful\n' +
-  '- snail (Helix aspersa) — patient, unhurried, carries home\n' +
-  '- jellyfish (Aurelia aurita) — drifts as the tide allows, translucent\n' +
-  '- pufferfish (Takifugu rubripes) — calm until cornered, surprise of spines\n' +
-  '- frog (Hyla arborea) — musician of dusk, sits still until it does not\n\n' +
-  'Output STRICT JSON only, no markdown fences, no commentary:\n' +
-  '{"species": "<id>", "verdict": "<one elegant Victorian-voice sentence>"}\n\n' +
-  'Where <id> is exactly one of: cat, dog, hamster, duck, rabbit, ' +
-  'goldfish, capybara, sloth, parrot, axolotl, hedgehog, red_panda, ' +
-  'fennec, otter, clam, octopus, snail, jellyfish, pufferfish, frog.\n\n' +
-  'The verdict is a single sentence under 24 words in the voice of ' +
-  'a 19th-c. naturalist (e.g. "The faint set of the brow betrays..." ' +
-  'or "Something in the bearing recalls..."). Do NOT use second ' +
-  'person ("you"). Refer to the subject as "the subject" or "this ' +
-  'specimen". No quotes inside the verdict.'
+  PET_FILTER_CARTRIDGE.curator.classifySystemIntro + '\n\n' +
+  buildClassificationCatalog() + '\n\n' +
+  PET_FILTER_CARTRIDGE.curator.outputRules + '\n\n' +
+  `Where <id> is exactly one of: ${buildSpeciesIdList()}.`
 );
 
 function buildClassifyUser(selfieUrl: string, avoid: string[]): string {
@@ -106,13 +88,7 @@ async function classify(selfieUrl: string, avoid: string[] = []): Promise<Classi
 // Fallback judgment when classification fails — used for the
 // random-species path so we still have a verdict to show.
 const JUDGMENT_SYSTEM = (
-  'You are a 19th-century natural history society scholar writing a ' +
-  'verdict for an unknown subject. Output ONE single elegant sentence ' +
-  'in the voice of a Victorian naturalist (e.g. "The faint set of ' +
-  "the brow betrays...\", \"Something in the bearing recalls...\"). " +
-  'Do NOT reference photographs, AI, or modern concepts. Do NOT use ' +
-  'second person ("you"). Refer to the subject as "the subject" or ' +
-  '"this specimen". Maximum 24 words. Plain text, no quotes.'
+  PET_FILTER_CARTRIDGE.curator.judgmentSystem
 );
 
 function buildJudgmentUserPrompt(petName: string, latin: string): string {
@@ -133,46 +109,16 @@ function randomPetId(exclude?: string[]): string {
 // the EYE ANCHOR) but rotates the CLIP text embedding enough to push
 // img2img into a different region of latent space. We sample one phrase
 // from each axis and append a short variation string to the prompt.
-const POSE_VARIATIONS = [
-  'three-quarter profile view',
-  'frontal observation pose',
-  'head turned slightly to the left',
-  'head turned slightly to the right',
-  'chin tilted gently upward',
-  'gaze cast slightly downward',
-];
-const LIGHT_VARIATIONS = [
-  'soft morning light from the upper left',
-  'warm evening glow from the right',
-  'diffuse overcast museum lighting',
-  'cool north-window naturalist lamp',
-  'amber lantern light, faint shadow',
-];
-const COMPOSITION_VARIATIONS = [
-  'a sprig of botanical specimens (ferns) in the lower margin',
-  'a small marginal vignette of leaves in one corner',
-  'a faint hand-written annotation in the lower right corner (no readable text)',
-  'a subtle wash of background landscape (distant hills, low horizon)',
-  'a single dried-flower study in the corner',
-  'a stippled empty background, archival emptiness',
-];
-const RENDER_VARIATIONS = [
-  'denser cross-hatching technique',
-  'looser softer watercolor wash dominant',
-  'bolder ink contour line',
-  'finer stipple shading on the cheek',
-  'gentle dry-brush highlights along the brow',
-];
-
-function pickOne<T>(arr: T[]): T {
+function pickOne<T>(arr: readonly T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
 function buildVariationSuffix(): string {
+  const axes = PET_FILTER_CARTRIDGE.imagePrompt.variationAxes;
   return (
-    ` Compositional variation for this plate: ${pickOne(POSE_VARIATIONS)}; ` +
-    `${pickOne(LIGHT_VARIATIONS)}; ${pickOne(COMPOSITION_VARIATIONS)}; ` +
-    `${pickOne(RENDER_VARIATIONS)}.`
+    ` Compositional variation for this plate: ${pickOne(axes.pose)}; ` +
+    `${pickOne(axes.light)}; ${pickOne(axes.composition)}; ` +
+    `${pickOne(axes.render)}.`
   );
 }
 

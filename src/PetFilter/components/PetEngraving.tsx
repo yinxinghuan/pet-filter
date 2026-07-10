@@ -15,8 +15,7 @@ interface Props {
 }
 
 export default function PetEngraving({ id, size = 64 }: Props) {
-  const Cmp = ENGRAVINGS[id];
-  if (!Cmp) return null;
+  const Cmp = ENGRAVINGS[id] ?? BotanicalFallbackEng;
   return (
     <svg viewBox="0 0 80 80" width={size} height={size}
          fill="none" stroke="currentColor"
@@ -24,6 +23,27 @@ export default function PetEngraving({ id, size = 64 }: Props) {
          aria-hidden>
       <Cmp />
     </svg>
+  );
+}
+
+function BotanicalFallbackEng() {
+  return (
+    <>
+      <circle cx="40" cy="42" r="18" strokeWidth={1.2} />
+      <path d="M40 24 C34 16 28 12 22 12 C22 22 28 28 40 32" strokeWidth={1.1} />
+      <path d="M40 24 C46 16 52 12 58 12 C58 22 52 28 40 32" strokeWidth={1.1} />
+      <path d="M24 46 C30 38 50 38 56 46" strokeWidth={0.8} strokeOpacity={0.55} />
+      <path d="M32 54 C36 57 44 57 48 54" strokeWidth={0.8} strokeOpacity={0.55} />
+      <circle cx="33" cy="39" r="1.6" fill="currentColor" />
+      <circle cx="47" cy="39" r="1.6" fill="currentColor" />
+      <path d="M40 44 C37 45 37 48 40 49 C43 48 43 45 40 44" strokeWidth={0.7} />
+      <path d="M18 58 C24 50 32 48 40 58 C48 48 56 50 62 58" strokeWidth={1} />
+      <g fill="currentColor" fillOpacity={0.45}>
+        <circle cx="29" cy="25" r="1" />
+        <circle cx="51" cy="25" r="1" />
+        <circle cx="40" cy="19" r="1" />
+      </g>
+    </>
   );
 }
 

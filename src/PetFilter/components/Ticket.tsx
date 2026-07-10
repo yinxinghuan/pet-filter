@@ -65,7 +65,7 @@ export default function Ticket({
       <div className="pf-plate__rules" aria-hidden />
 
       <header className="pf-plate__head">
-        <span className="pf-plate__house">ALTERU · Natural History</span>
+        <span className="pf-plate__house">{t('brand_mark')}</span>
         <span className="pf-plate__plate">{plate ?? t('plate_header_default')}</span>
         <span className="pf-plate__rubric">{rubric ?? t('plate_rubric_default')}</span>
       </header>

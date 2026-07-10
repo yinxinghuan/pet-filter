@@ -7,8 +7,9 @@ import ReactionIcon from './ReactionIcons';
 import { playPop, hapticTap } from '../utils/audio';
 import { openAigramProfile, isInAigram } from '@shared/runtime/bridge';
 import { MAX_LEN, timeAgo, type GuestMessage } from '@shared/social/guestbook';
+import { PET_FILTER_CARTRIDGE } from '../cartridge';
 
-const ALTERU_APP_URL = 'https://apps.apple.com/app/id6769646546';
+const ALTERU_APP_URL = 'https://alteru.app';
 
 interface Props {
   shot: PetShot;
@@ -41,7 +42,7 @@ interface Props {
   onSendNote?: (text: string) => void;
 }
 
-const REACTION_ORDER: ReactionKind[] = ['heart', 'fire', 'mind', 'eye'];
+const REACTION_ORDER: ReactionKind[] = PET_FILTER_CARTRIDGE.social.reactionOrder;
 
 export default function ResultScreen({
   shot, cameFromWall, author, myReactions, onToggleReaction, onNew, onWall, onShare,
@@ -92,7 +93,7 @@ export default function ResultScreen({
               </span>
             )}
             <span className="pf-result__author-meta">
-              <em className="pf-result__author-by">a plate by</em>
+              <em className="pf-result__author-by">{t('result_author_by')}</em>
               <span className="pf-result__author-name">
                 {author.userName || `user ${author.userId.slice(0, 6)}`}
               </span>
@@ -113,7 +114,7 @@ export default function ResultScreen({
             <span className="pf-result__judgment-quote">“</span>
             <em>{shot.judgment}</em>
             <span className="pf-result__judgment-quote pf-result__judgment-quote--close">”</span>
-            <footer className="pf-result__judgment-sig"><em>— the Society</em></footer>
+            <footer className="pf-result__judgment-sig"><em>— {t('result_judgment_signature')}</em></footer>
           </blockquote>
         )}
 
@@ -362,7 +363,7 @@ function ReactionRow({
               disabled={active}
               onPointerDown={() => handleTap(kind, active)}
               aria-pressed={active}
-              aria-label={kind}
+              aria-label={PET_FILTER_CARTRIDGE.social.reactionAriaLabels[kind]}
             >
               <ReactionIcon kind={kind} size={18} />
             </button>

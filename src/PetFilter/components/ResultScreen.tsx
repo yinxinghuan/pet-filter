@@ -5,7 +5,7 @@ import { petById } from '../utils/pets';
 import type { PetShot, ReactionKind } from '../types';
 import ReactionIcon from './ReactionIcons';
 import { playPop, hapticTap } from '../utils/audio';
-import { openAigramProfile, isInAigram } from '@shared/runtime/bridge';
+import { openAigramProfile, isInAigramNow } from '@shared/runtime/bridge';
 import { MAX_LEN, timeAgo, type GuestMessage } from '@shared/social/guestbook';
 import { PET_FILTER_CARTRIDGE } from '../cartridge';
 
@@ -256,9 +256,9 @@ function Guestbook({
                   className={`pf-note__who ${isSelf ? 'is-self' : ''}`}
                   onClick={(ev) => {
                     ev.stopPropagation();
-                    if (!isSelf && isInAigram && m.fromUserId) openAigramProfile(m.fromUserId);
+                    if (!isSelf && isInAigramNow() && m.fromUserId) openAigramProfile(m.fromUserId);
                   }}
-                  disabled={isSelf || !isInAigram || !m.fromUserId}
+                  disabled={isSelf || !isInAigramNow() || !m.fromUserId}
                   aria-label={isSelf ? undefined : `Open ${name || 'naturalist'}'s profile`}
                 >
                   {isSelf ? (

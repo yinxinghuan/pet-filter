@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import Ticket from './Ticket';
 import { t } from '../i18n';
 import { useGameStats } from '@shared/runtime/useGameStats';
-import { isInAigram, telegramId, openAigramProfile } from '@shared/runtime/bridge';
+import { isInAigramNow, getTelegramId, openAigramProfile } from '@shared/runtime/bridge';
 import { fallbackTotal, dominantReaction, reactionAggregateEvent } from '../utils/reactions';
 import { useLongPress } from '../hooks/useLongPress';
 import { playPop, hapticTap } from '../utils/audio';
@@ -71,7 +71,7 @@ export default function Wall({
   const reactionsOf = (id: string): Set<ReactionKind> =>
     myReactions.get(id) ?? new Set<ReactionKind>();
 
-  const myTid = telegramId ? String(telegramId) : '';
+  const myTid = getTelegramId()! ? String(getTelegramId()!) : '';
   const myEntries: WallEntry[] = mine.map((s) => ({ userId: 'self', userName: 'You', shot: s }));
   const others = myTid ? community.filter((e) => e.userId !== myTid) : community;
   const entries: WallEntry[] = (() => {
@@ -316,8 +316,8 @@ function WallRow({ entry, idx, scope, mine, onSelect, armed, canDelete, onArm, o
   const pet = petById(shot.petId);
   const agg = useGameStats(reactionAggregateEvent(shot.id));
   const real = agg.stats.total_user_count;
-  const total = isInAigram ? real : fallbackTotal(shot.id, mine);
-  const dominant: ReactionKind = isInAigram ? 'heart' : dominantReaction(shot.id, mine);
+  const total = isInAigramNow() ? real : fallbackTotal(shot.id, mine);
+  const dominant: ReactionKind = isInAigramNow() ? 'heart' : dominantReaction(shot.id, mine);
   const authorMeta = scope === 'all'
     ? { userId: entry.userId, userName: entry.userName, userAvatarUrl: entry.userAvatarUrl }
     : undefined;
@@ -358,9 +358,9 @@ function WallRow({ entry, idx, scope, mine, onSelect, armed, canDelete, onArm, o
                 className="pf-wall-row__author-chip"
                 onClick={(ev) => {
                   ev.stopPropagation();
-                  if (isInAigram) openAigramProfile(entry.userId);
+                  if (isInAigramNow()) openAigramProfile(entry.userId);
                 }}
-                disabled={!isInAigram}
+                disabled={!isInAigramNow()}
                 aria-label={`Open ${entry.userName || ARCHIVE_COPY.authorFallback}'s profile`}
               >
                 <em>{ARCHIVE_COPY.authorPrefix} </em>
@@ -434,8 +434,8 @@ function WallTile({ entry, mine, onSelect, scope, armed, canDelete, onArm, onCon
   const shot = entry.shot;
   const pet = petById(shot.petId);
   const agg = useGameStats(reactionAggregateEvent(shot.id));
-  const total = isInAigram ? agg.stats.total_user_count : fallbackTotal(shot.id, mine);
-  const dominant: ReactionKind = isInAigram ? 'heart' : dominantReaction(shot.id, mine);
+  const total = isInAigramNow() ? agg.stats.total_user_count : fallbackTotal(shot.id, mine);
+  const dominant: ReactionKind = isInAigramNow() ? 'heart' : dominantReaction(shot.id, mine);
   const authorMeta = scope === 'all'
     ? { userId: entry.userId, userName: entry.userName, userAvatarUrl: entry.userAvatarUrl }
     : undefined;

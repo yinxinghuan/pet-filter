@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useGameSave } from '@shared/save';
-import { useGameEvent, callAigramAPI, isInAigram, telegramId, type AigramResponse } from '@shared/runtime';
+import { useGameEvent, callAigramAPI, isInAigramNow, getTelegramId, type AigramResponse } from '@shared/runtime';
 import FrontispiecePage from './components/FrontispiecePage';
 import PickerScreen from './components/PickerScreen';
 import ProcessingScreen from './components/ProcessingScreen';
@@ -71,12 +71,12 @@ export default function PetFilter() {
   // available. Off-platform users (or accounts without an avatar) fall
   // through to the upload-first CTA.
   useEffect(() => {
-    if (!isInAigram || !telegramId) return;
+    if (!isInAigramNow() || !getTelegramId()!) return;
     let cancelled = false;
     (async () => {
       try {
         const res = await callAigramAPI<AigramResponse<{ name?: string; head_url?: string }>>(
-          `/note/telegram/user/get/info/by/telegram_id?telegram_id=${encodeURIComponent(String(telegramId))}`,
+          `/note/telegram/user/get/info/by/telegram_id?telegram_id=${encodeURIComponent(String(getTelegramId()!))}`,
           'GET',
         );
         const url = res?.data?.head_url;
@@ -201,7 +201,7 @@ export default function PetFilter() {
     // so when the reaction fires we always know whose plate this is.
     const shot = current;
     const authorId = currentAuthor?.userId;
-    const selfId = telegramId || 'self';
+    const selfId = getTelegramId()! || 'self';
     const isOther = !!authorId && authorId !== 'self' && authorId !== selfId;
     const reactTmpl = PET_FILTER_CARTRIDGE.social.reactionNotifyTemplates[kind];
     const config = (isOther && shot && shot.imageUrl)
@@ -246,7 +246,7 @@ export default function PetFilter() {
     author: { userId: string; userName?: string; userAvatarUrl?: string } | null | undefined,
     text: string,
   ) => {
-    const selfId = telegramId ? String(telegramId) : '';
+    const selfId = getTelegramId()! ? String(getTelegramId()!) : '';
     const authorId = author?.userId;
     // The artifact's author — undefined for self/anon (no notify target).
     const toUserId = authorId && authorId !== 'self' ? authorId : undefined;
@@ -486,7 +486,7 @@ export default function PetFilter() {
           // A plate is "mine" if its id appears in our local discography.
           const mineIds = new Set((mirror?.shots ?? []).map((s) => s.id));
           const isMine = mineIds.has(current.id);
-          const myUid = telegramId ? String(telegramId) : undefined;
+          const myUid = getTelegramId()! ? String(getTelegramId()!) : undefined;
           // Best-effort wall notes ∪ my own outgoing notes for this plate.
           const thread = threadFor(
             current.id,
@@ -515,7 +515,7 @@ export default function PetFilter() {
               onDelete={isMine ? handleDeleteCurrent : undefined}
               notes={thread}
               myUserId={myUid}
-              canCompose={isInAigram}
+              canCompose={isInAigramNow()}
               onSendNote={(text) => sendMessage(current, noteAuthor, text)}
             />
           );

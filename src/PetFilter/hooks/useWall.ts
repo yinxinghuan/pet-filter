@@ -12,8 +12,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
   callAigramAPI,
-  isInAigram,
-  telegramId,
+  isInAigramNow,
+  getTelegramId,
   type AigramResponse,
 } from '@shared/runtime/bridge';
 import { getGameUuid } from '@shared/runtime/game-id';
@@ -55,7 +55,7 @@ export function useWall(): UseWall {
   const [loaded, setLoaded] = useState(false);
   const [nonce, setNonce] = useState(0);
   const [diagnostics, setDiagnostics] = useState<WallDiagnostics>({
-    isInAigram, sessionId: null, telegramId,
+    isInAigram: isInAigramNow(), sessionId: null, telegramId: getTelegramId()!,
     rowsFromPlatform: 0, userIdsFromPlatform: [],
     parsedShots: 0, error: null, fetchStatus: 'idle',
   });
@@ -68,22 +68,22 @@ export function useWall(): UseWall {
     // devtools whether the wall hook even fires + what it sees.
     // tslint:disable-next-line:no-console
     console.info('[pet-filter wall]', {
-      isInAigram, sessionId, telegramId,
-      reason: !isInAigram ? 'not in Aigram (api_origin/telegram_id missing)'
+      isInAigram: isInAigramNow(), sessionId, telegramId: getTelegramId()!,
+      reason: !isInAigramNow() ? 'not in Aigram (api_origin/telegram_id missing)'
         : !sessionId ? 'no game UUID resolved'
         : 'will fetch',
     });
-    if (!isInAigram || !sessionId) {
+    if (!isInAigramNow() || !sessionId) {
       setLoaded(true);
       setDiagnostics({
-        isInAigram, sessionId, telegramId,
+        isInAigram: isInAigramNow(), sessionId, telegramId: getTelegramId()!,
         rowsFromPlatform: 0, userIdsFromPlatform: [],
         parsedShots: 0, error: null,
         fetchStatus: 'skipped',
       });
       return;
     }
-    setDiagnostics((d) => ({ ...d, fetchStatus: 'loading', sessionId, telegramId }));
+    setDiagnostics((d) => ({ ...d, fetchStatus: 'loading', sessionId, telegramId: getTelegramId()! }));
     let cancelled = false;
     (async () => {
       try {
@@ -181,7 +181,7 @@ export function useWall(): UseWall {
         }
         setNotesByTarget(stampedNotes);
         setDiagnostics({
-          isInAigram, sessionId, telegramId,
+          isInAigram: isInAigramNow(), sessionId, telegramId: getTelegramId()!,
           rowsFromPlatform: rows.length,
           userIdsFromPlatform: rows.map((r) => r.user_id),
           parsedShots: pairs.length,
@@ -209,5 +209,5 @@ export function useWall(): UseWall {
 }
 
 export function isSelf(entry: WallEntry): boolean {
-  return !!telegramId && entry.userId === String(telegramId);
+  return !!getTelegramId()! && entry.userId === String(getTelegramId()!);
 }

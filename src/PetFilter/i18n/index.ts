@@ -15,7 +15,7 @@ function detectLocale(): Locale {
     if (q && LOCALES.includes(q as Locale)) return q as Locale;
   }
   const override = typeof localStorage !== 'undefined'
-    ? localStorage.getItem('game_locale')
+    ? alteruLocalStorage.getItem('game_locale')
     : null;
   if (override && LOCALES.includes(override as Locale)) {
     return override as Locale;

@@ -23,6 +23,7 @@ import sys
 import time
 import urllib.parse
 import urllib.request
+import uuid
 
 from PIL import Image
 
@@ -36,8 +37,9 @@ R2_BUCKET      = "aigram"
 R2_ENDPOINT    = f"https://{R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
 R2_PUBLIC      = "https://images.aiwaves.tech"
 
-API_URL      = "http://aiservice.wdabuliu.com:8019/genl_image"
-API_TIMEOUT  = 120
+MEDIA_API_BASE = "https://game.aiwaves.tech/alteru-media/api"
+SESSION_ID     = "fe0ac62d-462e-42a4-8622-85586a99d133"
+API_TIMEOUT    = 300
 RATE_LIMIT_S = 80
 
 _SSL_CTX = ssl.create_default_context()
@@ -102,25 +104,28 @@ def upload_ref(path: str) -> str:
 
 def call_api(ref_url: str, prompt: str) -> str | None:
     payload = json.dumps({
-        "query": "",
-        "params": {"url": ref_url, "prompt": prompt},
+        "request_id": str(uuid.uuid4()), "session_id": SESSION_ID,
+        "mode": "edit", "prompt": prompt,
+        "reference_urls": [ref_url], "size": {"width": 1024, "height": 1024},
     }).encode()
     req = urllib.request.Request(
-        API_URL, data=payload,
+        f"{MEDIA_API_BASE}/v1/images/generations", data=payload,
         headers={"Content-Type": "application/json"}, method="POST",
     )
     try:
-        with urllib.request.urlopen(req, timeout=API_TIMEOUT) as resp:
-            result = json.loads(resp.read())
+        with urllib.request.urlopen(req, timeout=60) as resp: task = json.loads(resp.read())
     except urllib.error.HTTPError as e:
         body = e.read().decode()
         sys.exit(f"ERROR HTTP {e.code}: {body[:200]}")
-    code = result.get("code")
-    if code == 200:
-        return result["url"]
-    if code == 429:
-        raise RuntimeError("rate_limit")
-    print(f"  ✗ API returned code={code} body={result}")
+    deadline = time.time() + API_TIMEOUT
+    while task.get("status") in ("queued", "running"):
+        if time.time() > deadline: raise RuntimeError("media_timeout")
+        time.sleep(4)
+        with urllib.request.urlopen(f"{MEDIA_API_BASE}/v1/tasks/{task['task_id']}", timeout=60) as resp:
+            task = json.loads(resp.read())
+    if task.get("status") == "succeeded" and task.get("media", {}).get("url"):
+        return task["media"]["url"]
+    print(f"  ✗ media task={task}")
     return None
 
 

@@ -7,6 +7,7 @@ import Ticket from './Ticket';
 import { PETS, type Pet } from '../utils/pets';
 import { t, tCategory } from '../i18n';
 import { playClick } from '../utils/audio';
+import { FlourishIcon } from './OrnamentIcons';
 
 interface Props {
   onBack: () => void;
@@ -35,7 +36,7 @@ export default function BestiaryPage({ onBack, onSubmit }: Props) {
       <p className="pf-deck"><em>{t('bestiary_sub')}</em></p>
 
       <div className="pf-section-rule" aria-hidden>
-        <span className="pf-fleuron">❦</span>
+        <FlourishIcon className="pf-fleuron" />
       </div>
 
       {(['everyday', 'wholesome', 'uncanny'] as const).map((cat) => (

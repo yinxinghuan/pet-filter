@@ -4,6 +4,7 @@ import { t } from '../i18n';
 import { previewURL } from '../utils/selfie';
 import { playClick } from '../utils/audio';
 import PetEngraving from './PetEngraving';
+import { FlourishIcon, StarburstIcon } from './OrnamentIcons';
 
 interface Props {
   source: { kind: 'file'; file: File; previewUrl: string } | { kind: 'url'; url: string } | null;
@@ -70,7 +71,7 @@ export default function PickerScreen({
     >
       {recentSubmission && (
         <div className="pf-daily-badge" role="note">
-          <span className="pf-daily-badge__icon" aria-hidden>✶</span>
+          <StarburstIcon className="pf-daily-badge__icon" />
           <span className="pf-daily-badge__text">
             <em>{t('daily_recent')}</em>
             {' · '}
@@ -92,13 +93,13 @@ export default function PickerScreen({
 
       {errorLabel ? (
         <div className="pf-error pf-error--persistent" role="alert">
-          <span className="pf-error__icon" aria-hidden>✶</span>
+          <StarburstIcon className="pf-error__icon" />
           <span><em>{errorLabel}</em></span>
         </div>
       ) : null}
 
       <div className="pf-section-rule" aria-hidden>
-        <span className="pf-fleuron">❦</span>
+        <FlourishIcon className="pf-fleuron" />
       </div>
 
       {/* Specimen — the only required input. Centered, prominent. */}
@@ -144,7 +145,7 @@ export default function PickerScreen({
       </section>
 
       <div className="pf-section-rule" aria-hidden>
-        <span className="pf-fleuron">❦</span>
+        <FlourishIcon className="pf-fleuron" />
       </div>
 
       {/* Tap-target "peek the orders" — opens the Bestiary for a full

@@ -8,6 +8,7 @@ import { playPop, hapticTap } from '../utils/audio';
 import { openAigramProfile, isInAigramNow } from '@shared/runtime/bridge';
 import { MAX_LEN, timeAgo, type GuestMessage } from '@shared/social/guestbook';
 import { PET_FILTER_CARTRIDGE } from '../cartridge';
+import { PenIcon } from './OrnamentIcons';
 
 const ALTERU_APP_URL = 'https://alteru.app';
 
@@ -139,7 +140,7 @@ export default function ResultScreen({
                         onShare();
                       }}
                       disabled={!!shareLabel}>
-                <span className="pf-result__share-icon" aria-hidden>✎</span>
+                <PenIcon className="pf-result__share-icon" />
                 {shareLabel || t('cta_share')}
               </button>
             )}
@@ -179,7 +180,7 @@ export default function ResultScreen({
                         onShare();
                       }}
                       disabled={!!shareLabel}>
-                <span className="pf-result__share-icon" aria-hidden>✎</span>
+                <PenIcon className="pf-result__share-icon" />
                 {shareLabel || t('cta_share_again')}
               </button>
             )}

@@ -122,6 +122,18 @@ function buildVariationSuffix(): string {
   );
 }
 
+function buildIdentitySafePrompt(petName: string, variation: string): string {
+  return (
+    'HARD FULL-VISUAL-IDENTITY CAST MAP: SUBJECT A is the complete identity from reference image 1. ' +
+    'Create a reference-preserving 19th-century natural-history study of exactly SUBJECT A. Reproduce the original visible form and appearance: silhouette, every visible shape and opening, skin or material, hair or fabric, colors, patterns, clothing, accessories, occlusion, pose, and all identity-defining details. Keep these structurally unchanged. ' +
+    `Express ${petName} only as restrained flat watercolor markings on the already-visible surfaces plus a small two-dimensional background vignette; never alter SUBJECT A's silhouette or insert a new head, face, body, limb, clothing layer, or creature underneath. Identity fidelity is more important than species strength. ` +
+    'Do not assume SUBJECT A is human. If SUBJECT A is non-human, faceless, masked, covered, or lacks any face, skin, hair, hands, arms, legs, feet, or other body part, do not alter its surface at all and express the species only in the background vignette; preserve that exact structure and absence. Absent anatomy MUST NOT be invented, hidden features MUST NOT be revealed, and new markings or accessories MUST NOT be added to SUBJECT A. ' +
+    'Fine pen-and-ink linework with a soft watercolor wash on aged cream paper with faint foxing; centered observation portrait in a square composition. ' +
+    'Render exactly one SUBJECT A. No generic replacement person or animal, duplicate subject, text, letters, numbers, labels, logos, frames, or borders.' +
+    variation
+  );
+}
+
 export type Stage = '' | 'uploading' | 'morphing' | 'rendering' | 'settling';
 
 interface GenInput {
@@ -233,7 +245,7 @@ export function usePetGen(): UsePetGen {
         const judgmentPromise = needSeparateJudgment
           ? chatOnce(JUDGMENT_SYSTEM, buildJudgmentUserPrompt(pet.name, pet.latin))
           : Promise.resolve('');
-        const variedPrompt = pet.prompt + buildVariationSuffix();
+        const variedPrompt = buildIdentitySafePrompt(pet.name, buildVariationSuffix());
         const [imageUrl, fallbackJudgment] = await Promise.all([
           genImg({ prompt: variedPrompt, ref_url: selfieUrl }),
           judgmentPromise,

@@ -72,7 +72,7 @@ Wired into:
   machine-readable manifest for downstream asset generation.
 - `scripts/gen-species-assets.mjs`: cover/demo asset generation planner and
   generator. Dry-run is the default; pass `--generate` to call the platform
-  gen-image API and write local files. Generated platform WebP responses are
+  AlterU media task API and write local files. Generated platform responses are
   normalized into real 1024x1024 JPEG assets through `sharp`; cover images use
   a moderate safe crop, while frontispiece demos use a tighter crop to remove
   text/signature artifacts from the generated edges.

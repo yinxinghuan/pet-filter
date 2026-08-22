@@ -11,6 +11,7 @@ import { petById } from '../utils/pets';
 import { PET_FILTER_CARTRIDGE } from '../cartridge';
 import type { WallDiagnostics } from '../hooks/useWall';
 import type { PetShot, ReactionKind, WallEntry } from '../types';
+import { StarburstIcon } from './OrnamentIcons';
 
 export type ScopeMode = 'my' | 'all';
 type ViewMode = 'list' | 'grid';
@@ -206,7 +207,7 @@ export default function Wall({
 
       {aloneInArchive && entries.length > 0 && (
         <div className="pf-wall-alone" role="note">
-          <span className="pf-wall-alone__icon" aria-hidden>✶</span>
+          <StarburstIcon className="pf-wall-alone__icon" />
           <em>{t('wall_alone')}</em>
         </div>
       )}

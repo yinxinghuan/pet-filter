@@ -8,14 +8,15 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+import { randomUUID } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PUBLIC_DIR = path.join(ROOT, 'public');
 const CARTRIDGE_DIR = path.join(ROOT, 'src/PetFilter/cartridge');
-const API_URL = 'https://chat.aiwaves.tech/aigram/api/gen-image';
-const ORIGIN = 'https://aigram.app';
+const MEDIA_API_BASE = 'https://game.aiwaves.tech/alteru-media/api';
+const SESSION_ID = 'fe0ac62d-462e-42a4-8622-85586a99d133';
 
 function parseArgs(argv) {
   const args = {
@@ -73,7 +74,7 @@ function usage(code) {
     '  npm run gen:species-assets -- --pack src/PetFilter/cartridge/gen-...Species.json --generate',
     '',
     'Options:',
-    '  --generate       Actually call the gen-image API. Default is dry-run.',
+    '  --generate       Actually call the AlterU media API. Default is dry-run.',
     '  --activate       Activate generated.ts only after every required cover/demo asset exists.',
     '  --force          Regenerate files that already exist.',
     '  --covers-only    Generate only cover_<id>.jpg files.',
@@ -151,25 +152,35 @@ function buildJobs(pack, args) {
 }
 
 async function generateImage(job) {
-  const body = job.refUrl
-    ? { prompt: job.prompt, ref_url: job.refUrl }
-    : { prompt: job.prompt };
-  const res = await fetch(API_URL, {
+  const res = await fetch(`${MEDIA_API_BASE}/v1/images/generations`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Origin: ORIGIN,
-    },
-    body: JSON.stringify(body),
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      request_id: randomUUID(),
+      session_id: SESSION_ID,
+      mode: job.refUrl ? 'edit' : 'text',
+      prompt: job.prompt,
+      reference_urls: job.refUrl ? [job.refUrl] : [],
+      size: { width: 1024, height: 1024 },
+    }),
   });
   if (!res.ok) {
     const text = await res.text();
-    throw new Error(`gen-image HTTP ${res.status}: ${text.slice(0, 220)}`);
+    throw new Error(`AlterU media submit HTTP ${res.status}: ${text.slice(0, 220)}`);
   }
-  const data = await res.json();
-  const url = typeof data === 'string' ? data : data.url ?? data.image_url ?? data.output?.url;
-  if (!url) throw new Error(`gen-image response had no url: ${JSON.stringify(data).slice(0, 220)}`);
-  return url;
+  let task = await res.json();
+  const deadline = Date.now() + 300_000;
+  while (task.status === 'queued' || task.status === 'running') {
+    if (Date.now() > deadline) throw new Error(`AlterU media task timed out: ${task.task_id}`);
+    await sleep(4_000);
+    const poll = await fetch(`${MEDIA_API_BASE}/v1/tasks/${encodeURIComponent(task.task_id)}`);
+    if (!poll.ok) throw new Error(`AlterU media poll HTTP ${poll.status}: ${await poll.text()}`);
+    task = await poll.json();
+  }
+  if (task.status !== 'succeeded' || !task.media?.url) {
+    throw new Error(`AlterU media task failed: ${JSON.stringify(task).slice(0, 500)}`);
+  }
+  return task.media.url;
 }
 
 async function download(url, outPath, kind) {
@@ -297,7 +308,7 @@ async function run() {
   }
 
   if (!args.generate) {
-    console.log('\nDry run only. Pass --generate to call gen-image.');
+    console.log('\nDry run only. Pass --generate to call the AlterU media service.');
     if (args.activate) activateGeneratedPack(pack, args.outDir);
     return;
   }

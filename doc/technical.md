@@ -30,6 +30,9 @@
 - `src/PetFilter/utils/pets.ts`：游戏源码模块。
 - `src/PetFilter/utils/reactions.ts`：游戏源码模块。
 - `src/PetFilter/utils/selfie.ts`：游戏源码模块。
+- `src/shared/runtime/media.ts`：AlterU 媒体任务提交、轮询、结构化错误、尺寸规整和幂等键。
+- `src/shared/runtime/useGenImage.ts`：固定 `edit`、单引用、1024×1024 和一次受控重试。
+- `scripts/gen-species-assets.mjs`、`gen_all.py`、`gen_hybrid_only.py`、`gen_demo_portraits.py`：离线素材生成工具，同样提交并轮询 AlterU 媒体任务，不再调用历史图片服务。
 
 关键源码模块：
 
@@ -67,7 +70,7 @@
 - 多语言：包含 i18n / locale 检测或 `t()` 文案函数。
 - 存储：使用 localStorage、useGameSave 或 persist 保存分数、收藏、墙数据或本地状态。
 - Aigram 运行时：接入 `@shared/runtime` 或平台桥接能力，用于用户、资料页、分享、通知或平台 API。
-- AI / 生成接口：包含图像生成、视觉识别、ref_url 或 img2img 相关流程。
+- AI / 生成接口：物种分类和维多利亚式判词继续走现有 `game-chat` LLM；肖像通过现有上传边界取得公网 URL；最终图鉴只走 AlterU 独立媒体任务服务，不再调用旧图片转发接口。
 - 社交墙 / 归档：包含 wall、gallery、feed 或 archive 数据流与浏览界面。
 
 ## 4. 扩展点

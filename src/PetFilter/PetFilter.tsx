@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useGameSave } from '@shared/save';
 import { useGameEvent, callAigramAPI, isInAigramNow, getTelegramId, type AigramResponse } from '@shared/runtime';
+import { waitForAigramIdentity } from '@shared/runtime/identity-ready';
 import FrontispiecePage from './components/FrontispiecePage';
 import PickerScreen from './components/PickerScreen';
 import ProcessingScreen from './components/ProcessingScreen';
@@ -71,12 +72,13 @@ export default function PetFilter() {
   // available. Off-platform users (or accounts without an avatar) fall
   // through to the upload-first CTA.
   useEffect(() => {
-    if (!isInAigramNow() || !getTelegramId()!) return;
     let cancelled = false;
     (async () => {
+      const telegramId = await waitForAigramIdentity();
+      if (cancelled || !telegramId) return;
       try {
         const res = await callAigramAPI<AigramResponse<{ name?: string; head_url?: string }>>(
-          `/note/telegram/user/get/info/by/telegram_id?telegram_id=${encodeURIComponent(String(getTelegramId()!))}`,
+          `/note/telegram/user/get/info/by/telegram_id?telegram_id=${encodeURIComponent(telegramId)}`,
           'GET',
         );
         const url = res?.data?.head_url;
